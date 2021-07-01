@@ -35,6 +35,20 @@
 		when (typep constraint 'element-iname)
 		collect constraint))
 
+(defun meet-constraint (element constraints parents)
+	""
+	(if (and (find :list constraints) (null (typep element 'cons))) nil 
+		(if (typep element 'cons) 
+			(not (loop for ele in element
+				when (null (meet-constraint ele 
+							(remove :list constraints) parents))
+				return T))
+			(and (or (null (find :type constraints)) (type-node? element))
+					  (or (null (find :indv constraints)) (indv-node? element))
+					  (not (loop for parent in parents
+					  		when (not (simple-is-x-a-y? element parent)) 
+					  		return T))))))
+
 (defun variable-match (text constraints)
 	"The function takes in a raw text and a list of constraints
 	for the variable, returns the matched scone elements that
@@ -44,27 +58,19 @@
 		(append 
 		(loop for element_pair in (lookup-definitions text syntax_tag)
 			for element = (car element_pair)
-			when (and (or (null (find :type constraints)) (type-node? element))
-					  (or (null (find :indv constraints)) (indv-node? element))
-					  (not (loop for parent in parents
-					  		when (not (simple-is-x-a-y? element parent)) 
-					  		return T)))
+			when (meet-constraint element constraints parents)
 			collect (list element (copy-tree *referral*)))
 		(loop for element_pair in (constructor text syntax_tag)
 			for element = (car element_pair)
 			for context = (nth 2 element_pair)
-			when (and (or (null (find :type constraints)) (type-node? element))
-					  (or (null (find :indv constraints)) (indv-node? element))
-					  (not (loop for parent in parents
-					  		when (not (simple-is-x-a-y? element parent)) 
-					  		return T)))
+			when (meet-constraint element constraints parents)
 			collect (list element context)))))
-
 
 (defun one-ele-match (text pattern var_constraint)
 	"The function takes in a raw text, a single pattern, a list of 
 	variable constraints and check if the textmatch the pattern."
-	(if (typep pattern 'integer) (variable-match text (nth pattern var_constraint))
+	(if (typep pattern 'integer) 
+		(variable-match text (nth pattern var_constraint))
 		(find text pattern :test #'string-equal)))
 
 (defun construction-match-checker (wordlist pattern_list var_constraint)
@@ -90,6 +96,15 @@
 	(setf *referral* before-context)
 	result))
 
+(defun base-case-matcher (len ref)
+	""
+	(append (loop for i from 1 to len collect nil) (list ref)))
+
+(defun change-ith-list (l i new_content)
+	""
+	(setf (nth i l) new_content)
+	l)
+
 (defun construction-matcher (wordlist pattern_list var_constraint)
 	"The main matcher function that takes in a wordlist, a pattern list and 
 	a list of variable constraints and returns all possible combination
@@ -98,7 +113,8 @@
 		(result
 	(if (or (null pattern_list) (null wordlist) 
 			(< (length wordlist) (length pattern_list))) 
-		(list (list (copy-tree *referral*)))
+		(list (base-case-matcher (length var_constraint) (copy-tree *referral*)))
+
 		(loop for i from 1 to (+ (- (length wordlist) (length pattern_list)) 1)
 			for text = (join_list_by_space (sublst wordlist 0 i))
 			when (and 
@@ -121,7 +137,7 @@
 							(loop for rest_ele in (construction-matcher 
 							  		(sublst wordlist i (- (length wordlist) i)) 
 									(cdr pattern_list) var_constraint)
-							  	collect (cons ele rest_ele))))))))))
+							  	collect (change-ith-list rest_ele (car pattern_list) ele))))))))))
 	(setf *referral* before-context)
 	result))
 
@@ -129,9 +145,31 @@
 ;;; Constructor
 
 (defun tokenizer (text)
-	"a simple tokenizer that takes a raw text and split by space."
-	(setq temp_list (cl-ppcre:split "\\s+" text))
-	(loop for x in temp_list collect x))
+	"a simple tokenizer that takes a raw text and split by space
+	keep comma as a separate token."
+	(let ((temp_list (cl-ppcre:split "\\s+" text))) 
+		(loop for str in temp_list 
+			append (if (equal (char str (- (length str) 1)) #\,)
+						(list (subseq str 0 (- (length str) 1)) ",")
+						(list str)))))
+
+(defun flatten-variable (variable_value constraint)
+	""
+	(if (null variable_value) (list NIL) 
+		(let ((rest_result 
+				(flatten-variable (cdr variable_value) (cdr constraint))))
+			(if (or (find :list (car constraint)) (null (typep (car variable_value) 'cons)))
+				(mapcar (lambda (subl) (append (list (car variable_value)) subl)) rest_result)
+				(loop for val in (car variable_value)
+					append (mapcar (lambda (subl) (append (list val) subl)) rest_result))
+				))))
+
+(defun multiple-apply (action variable_value_list)
+	""
+	(if (= (length variable_value_list) 1)
+		(apply action (car variable_value_list))
+		(loop for var_value in variable_value_list
+			collect (apply action var_value))))
 
 (defun constructor (text &optional taglist)
 	"the function takes in raw text and optional syntax tags 
@@ -142,6 +180,7 @@
 	(let ((result (loop for construction in *constructions*
 		for pattern = (construction-pattern construction)
 		for constraint = (construction-var-constraint construction)
+		for modifier = (construction-modifier construction)
 		for tag = (construction-tag construction)
 		do (setf *referral* before-context)
 		when (and (not (null (construction-match-checker 
@@ -152,7 +191,8 @@
 					for variable_value = (reverse (cdr (reverse match_result)))
 					do (setf *referral* (car (last match_result)))
 					collect (handler-case (list 
-						(apply (construction-action construction) variable_value)   
+						(multiple-apply (construction-action construction) 
+							(flatten-variable variable_value constraint))   
 						tag (copy-tree *referral*)) (t nil))))))
 		(setf *referral* before-context)
 		(loop for r in result

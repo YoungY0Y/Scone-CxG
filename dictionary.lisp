@@ -13,6 +13,7 @@
 (new-indv {Clyde} {thing})
 
 (new-type {apple} {natural object} :english '("apples"))
+(new-type {banana} {natural object} :english '("bananas"))
 (new-type {leaf} {natural object} :english '("leaves"))
 (new-type {basketball} {man-made object} :english '("basketballs"))
 
@@ -24,6 +25,38 @@
 
 (new-type {mouse} {animal} :english '("mouse" "mice"))
 (new-type {computer mouse} {man-made object} :english '("mouse" "mice"))
+
+(english {elephant} :iname "elephants")
+(english {dog} :iname "dogs")
+
+;;; ------------------------------------------------------------------------
+;;; noun count
+
+(new-type-role {count} {tangible} {number})
+
+(new-type {integer range} {inexact number})
+(new-type-role {lower bound} {integer range} {integer})
+(new-type-role {upper bound} {integer range} {integer})
+
+(defun new-integer-range (name lowerbound upperbound)
+	"takes in the name, lowerbound and upperbound and return an
+	integer range node"
+	(let ((rangeNode (new-indv name {integer range})))
+		(if (not (null lowerbound)) (x-is-the-y-of-z lowerbound {lower bound} rangeNode))
+  	 	(if (not (null upperbound)) (x-is-the-y-of-z upperbound {upper bound} rangeNode))
+	 	rangeNode))
+
+(new-integer-range "some" 2 NIL)
+
+(defun new-string-number (name number_node)
+	""
+	(let ((new_node (new-indv name {exact number})))
+		(new-eq new_node number_node)
+		new_node))
+
+(new-string-number "one" {1})
+(new-string-number "two" {2})
+(new-string-number "a dozon of" {12})
 
 ;;; ------------------------------------------------------------------------
 ;;; action verb
