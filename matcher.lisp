@@ -35,24 +35,9 @@
 		when (typep constraint 'element-iname)
 		collect constraint))
 
-(defun meet-constraint (element constraints parents)
+(defun might-be-name (text constraints)
 	""
-	(if (and (find :list constraints) (null (typep element 'cons))) nil 
-		(if (typep element 'cons) 
-			(not (loop for ele in element
-				when (null (meet-constraint ele 
-							(remove :list constraints) parents))
-				return T))
-			(and (or (null (find :type constraints)) (type-node? element))
-					  (or (null (find :indv constraints)) (indv-node? element))
-					  (not (loop for parent in parents
-					  		when (not (simple-is-x-a-y? element parent)) 
-					  		return T))))))
-
-(defun might-be-new-name (text constraints)
-	""
-	(and (null (lookup-definitions text))
-		(not (loop for partial in (cl-ppcre:split "\\s+" text)
+	(and (not (loop for partial in (cl-ppcre:split "\\s+" text)
 		when (not (upper-case-p (char partial 0)))
 		return T))
 		(null (find :list constraints))
@@ -61,28 +46,66 @@
 		(null (find :adj constraints))
 		(null (find :type constraints))))
 
+
+(defun meet-constraint (element constraints parents ctx if_new_ctx)
+	""
+	(if (null element) ctx
+	(if (and (find :list constraints) (null (typep element 'cons))) nil 
+		(if (typep element 'cons) 
+			(let ((next_ctx (meet-constraint (car element) (remove :list constraints) parents ctx if_new_ctx)))
+				(if (null next_ctx) nil 
+					(if (and (null (simple-is-x-eq-y? next_ctx ctx)) if_new_ctx)
+						(meet-constraint (cdr element) constraints parents next_ctx nil)
+						(meet-constraint (cdr element) constraints parents next_ctx if_new_ctx))))
+
+			(if (and (or (null (find :type constraints)) (type-node? element))
+			     (or (null (find :indv constraints)) (indv-node? element))
+			     (not (loop for parent in parents
+					    when (not (simple-is-x-a-y? element parent)) 
+					  	return T))) ctx
+				(if (might-be-name (iname element) constraints)
+				(handler-case
+					(let ((before_context ctx)
+						  (new_ctx (if if_new_ctx (new-context NIL ctx) ctx)))
+						(in-context new_ctx)
+						(loop for parent in parents
+							do (new-is-a element parent))
+						(in-context before_context)
+						new_ctx) (t nil))))))))
+
 (defun variable-match (text constraints)
 	"The function takes in a raw text and a list of constraints
 	for the variable, returns the matched scone elements that
 	satisfies the constraints and the after referral context."
 	(let ((syntax_tag (get-syntax-tag constraints))
 		  (parents (get-parents constraints)))
-		(append 
-		(loop for element_pair in (lookup-definitions text syntax_tag)
-			for element = (car element_pair)
-			when (meet-constraint element constraints parents)
-			collect (list element *context* (copy-tree *referral*)))
-		(loop for element_pair in (constructor text syntax_tag)
-			for element = (car element_pair)
-			for context = (nth 2 element_pair)
-			for ref-context = (nth 3 element_pair)
-			when (meet-constraint element constraints parents)
-			collect (list element context ref-context))
-		(if (might-be-new-name text constraints) 
-			(let ((new_node (new-indv text {thing})))
-				(loop for parent in parents
-					do (new-is-a new_node parent))
-				(list (list new_node *context* (copy-tree *referral*))))))))
+		(let ((result 
+			(append 
+				(loop for element_pair in (lookup-definitions text syntax_tag)
+					for element = (car element_pair)
+					for new_ctx = (meet-constraint element constraints parents *context* t)
+					when (not (null new_ctx))
+					collect (list element new_ctx (copy-tree *referral*)))
+				(loop for element_pair in (constructor text syntax_tag)
+					for element = (car element_pair)
+					for context = (nth 2 element_pair)
+					for ref-context = (nth 3 element_pair)
+					for new_ctx = (meet-constraint element constraints parents context t)
+					when (not (null new_ctx))
+					collect (list element new_ctx ref-context)))))
+
+			(if (not (null result)) result
+				(if (might-be-name text constraints)
+					(handler-case 
+					(let ((new_node (new-indv text {thing}))
+						  (before_context *context*)
+						  (new_ctx (new-context NIL *context*)))
+						(in-context new_ctx)
+						(loop for parent in parents
+							do (new-is-a new_node parent))
+						(in-context before_context)
+						(append result (list (list new_node new_ctx (copy-tree *referral*)))))
+					(t nil)))))))
 
 (defun one-ele-match (text pattern var_constraint)
 	"The function takes in a raw text, a single pattern, a list of 

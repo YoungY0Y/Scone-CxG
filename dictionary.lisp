@@ -6,11 +6,11 @@
 ;;; ***************************************************************************
 
 ;;; names
-(new-indv {Yang} {person})
-(new-indv {Wesley} {person})
-(new-indv {Clara} {person})
-(new-indv {Tony} {thing})
-(new-indv {Clyde} {thing})
+; (new-indv {Yang} {person})
+; (new-indv {Wesley} {person})
+; (new-indv {Clara} {person})
+; (new-indv {Tony} {thing})
+; (new-indv {Clyde} {thing})
 
 (new-type {apple} {natural object} :english '("apples"))
 (new-type {banana} {natural object} :english '("bananas"))
