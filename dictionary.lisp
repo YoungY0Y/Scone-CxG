@@ -5,12 +5,6 @@
 ;;; Author: Yang Yang
 ;;; ***************************************************************************
 
-;;; names
-; (new-indv {Yang} {person})
-; (new-indv {Wesley} {person})
-; (new-indv {Clara} {person})
-; (new-indv {Tony} {thing})
-; (new-indv {Clyde} {thing})
 
 (new-type {apple} {natural object} :english '("apples"))
 (new-type {banana} {natural object} :english '("bananas"))
@@ -49,14 +43,15 @@
 (new-integer-range "some" 2 NIL)
 
 (defun new-string-number (name number_node)
-	""
+	"the function takes in a string name and a number node
+	then creates a new number node with that name."
 	(let ((new_node (new-indv name {exact number})))
 		(new-eq new_node number_node)
 		new_node))
 
 (new-string-number "one" {1})
 (new-string-number "two" {2})
-(new-string-number "a dozon of" {12})
+(new-string-number "a dozen of" {12})
 
 ;;; ------------------------------------------------------------------------
 ;;; action verb

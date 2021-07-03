@@ -8,7 +8,7 @@
 (defvar *result-record* nil)
 
 (defun refresh-context ()
-	"The function sets all saved referral context and text to nil."
+	"The function sets all saved contexts and text to nil."
 	(setf *referral* NIL)
 	(setf *text-record* nil)
 	(setf *result-record* nil)
