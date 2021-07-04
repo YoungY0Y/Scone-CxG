@@ -216,7 +216,7 @@
 	keep comma as a separate token."
 	(let ((temp_list (cl-ppcre:split "\\s+" text))) 
 		(loop for str in temp_list 
-			append (if (equal (char str (- (length str) 1)) #\,)
+			append (if (and (> (length str) 1) (equal (char str (- (length str) 1)) #\,))
 						(list (subseq str 0 (- (length str) 1)) ",")
 						(list str)))))
 
