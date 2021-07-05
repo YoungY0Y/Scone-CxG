@@ -47,7 +47,7 @@
 		(null (find :type constraints))))
 
 
-(defun meet-constraint (element constraints parents ctx if_new_ctx)
+(defun meet-constraint (element constraints parents ctx if_new_ctx verbose)
 	"The function takes in an element, the constraints for the variable, 
 	the parents for the variable, context of the element and whether
 	the context need to be renewed when encountered a name and returns 
@@ -58,13 +58,13 @@
 		(if (typep element 'cons) 
 			(let ((next_ctx 
 					(meet-constraint (car element) 
-						(remove :list constraints) parents ctx if_new_ctx)))
+						(remove :list constraints) parents ctx if_new_ctx verbose)))
 				(if (null next_ctx) nil 
 					(if (and (null (simple-is-x-eq-y? next_ctx ctx)) if_new_ctx)
 					(meet-constraint (cdr element) 
-						constraints parents next_ctx nil)
+						constraints parents next_ctx nil verbose)
 					(meet-constraint (cdr element) 
-						constraints parents next_ctx if_new_ctx))))
+						constraints parents next_ctx if_new_ctx verbose))))
 
 			(if (and (or (null (find :type constraints)) (type-node? element))
 			     (or (null (find :indv constraints)) (indv-node? element))
@@ -77,11 +77,12 @@
 						  (new_ctx (if if_new_ctx (new-context NIL ctx) ctx)))
 						(in-context new_ctx)
 						(loop for parent in parents
+							do (if verbose (commentary "Assume ~S is a ~S" element parent))
 							do (new-is-a element parent))
 						(in-context before_context)
 						new_ctx) (t nil))))))))
 
-(defun variable-match (text constraints)
+(defun variable-match (text constraints verbose)
 	"The function takes in a raw text and a list of constraints
 	for the variable, returns the matched scone elements that
 	satisfies the constraints, the after context
@@ -93,15 +94,17 @@
 				(loop for element_pair in (lookup-definitions text syntax_tag)
 					for element = (car element_pair)
 					for new_ctx = 
-						(meet-constraint element constraints parents *context* t)
+						(meet-constraint element constraints parents *context* t verbose)
 					when (not (null new_ctx))
-					collect (list element new_ctx (copy-tree *referral*)))
-				(loop for element_pair in (constructor text syntax_tag)
+					collect (progn
+						(if verbose (commentary "Match ~S with ~S" text element))
+						(list element new_ctx (copy-tree *referral*))))
+				(loop for element_pair in (constructor text syntax_tag verbose)
 					for element = (car element_pair)
 					for context = (nth 2 element_pair)
 					for ref-context = (nth 3 element_pair)
 					for new_ctx = 
-						(meet-constraint element constraints parents context t)
+						(meet-constraint element constraints parents context t verbose)
 					when (not (null new_ctx))
 					collect (list element new_ctx ref-context)))))
 
@@ -111,19 +114,19 @@
 					(let ((new_node (new-indv text {thing}))
 						  (before_context *context*)
 						  (new_ctx (new-context NIL *context*)))
+						(commentary "Create new name ~S" new_node)
 						(in-context new_ctx)
 						(loop for parent in parents
 							do (new-is-a new_node parent))
 						(in-context before_context)
-						(append result 
-							(list (list new_node new_ctx (copy-tree *referral*)))))
+						(list (list new_node new_ctx (copy-tree *referral*))))
 					(t nil)))))))
 
-(defun one-ele-match (text pattern var_constraint)
+(defun one-ele-match (text pattern var_constraint verbose)
 	"The function takes in a raw text, a single pattern, a list of 
 	variable constraints and check if the textmatch the pattern."
 	(if (typep pattern 'integer) 
-		(variable-match text (nth pattern var_constraint))
+		(variable-match text (nth pattern var_constraint) verbose)
 		(find text pattern :test #'string-equal)))
 
 (defun construction-match-checker (wordlist pattern_list var_constraint)
@@ -141,7 +144,7 @@
 					(+ (- (length wordlist) (length pattern_list)) 1)
 			for text = (join_list_by_space (sublst wordlist 0 i))
 			when (and 
-				(not (null (one-ele-match text (car pattern_list) var_constraint))) 
+				(not (null (one-ele-match text (car pattern_list) var_constraint NIL))) 
 				(construction-match-checker 
 					(sublst wordlist i (- (length wordlist) i)) 
 								(cdr pattern_list) var_constraint))
@@ -164,7 +167,7 @@
 	(setf (nth i l) new_content)
 	l)
 
-(defun construction-matcher (wordlist pattern_list var_constraint)
+(defun construction-matcher (wordlist pattern_list var_constraint verbose)
 	"The main matcher function that takes in a wordlist, a pattern list and 
 	a list of variable constraints and returns all possible combination
 	of the elements for the variables, the after context
@@ -178,18 +181,17 @@
 
 		(loop for i from 1 to (+ (- (length wordlist) (length pattern_list)) 1)
 			for text = (join_list_by_space (sublst wordlist 0 i))
+			for first_element_result = 
+				(one-ele-match text (car pattern_list) var_constraint verbose)
 			when (and 
-				(not (null (one-ele-match text (car pattern_list) var_constraint))) 
+				(not (null first_element_result)) 
 				(construction-match-checker 
 					(sublst wordlist i (- (length wordlist) i)) 
 					(cdr pattern_list) var_constraint))
 			append 
-			(let ((first_element_result 
-				(one-ele-match text (car pattern_list) var_constraint)))
-
 				(if (typep first_element_result 'string) 
 					(construction-matcher (sublst wordlist i (- (length wordlist) i)) 
-						(cdr pattern_list) var_constraint)
+						(cdr pattern_list) var_constraint verbose)
 		
 					(loop for ele_pair in first_element_result
 						for ele = (car ele_pair)
@@ -201,9 +203,9 @@
 							(loop for rest_ele in 
 								(construction-matcher 
 									(sublst wordlist i (- (length wordlist) i)) 
-									(cdr pattern_list) var_constraint)
+									(cdr pattern_list) var_constraint verbose)
 							collect (change-ith-list 
-										rest_ele (car pattern_list) ele))))))))))
+										rest_ele (car pattern_list) ele)))))))))
 	(setf *referral* before_ref_context)
 	(in-context before_context)
 	result))
@@ -216,7 +218,8 @@
 	keep comma as a separate token."
 	(let ((temp_list (cl-ppcre:split "\\s+" text))) 
 		(loop for str in temp_list 
-			append (if (and (> (length str) 1) (equal (char str (- (length str) 1)) #\,))
+			append (if (and (> (length str) 1) 
+							(equal (char str (- (length str) 1)) #\,))
 						(list (subseq str 0 (- (length str) 1)) ",")
 						(list str)))))
 
@@ -254,7 +257,7 @@
 			(+ 1 (context-occurance ctx (cdr match_results)))
 			(context-occurance ctx (cdr match_results)))))
 
-(defun constructor (text &optional taglist)
+(defun constructor (text &optional taglist verbose)
 	"the function takes in raw text and optional syntax tags 
 	and applies matched constructions actions on it, return the
 	output scone element, syntax tag, the context and the referral 
@@ -271,8 +274,12 @@
 		when (and (not (null (construction-match-checker 
 						(tokenizer text) pattern constraint)))
 			(or (null taglist) (find tag taglist)))
-		append (let ((match_results 
-						(construction-matcher (tokenizer text) pattern constraint)))
+		append 
+			(progn
+			(if verbose (commentary "Match ~S with construction ~S pattern ~{~a~^, ~}" 
+								text (construction-doc construction) pattern))
+			(let ((match_results 
+						(construction-matcher (tokenizer text) pattern constraint verbose)))
 			(loop for match_result in match_results
 					for variable_value = (reverse (cdr (cdr (reverse match_result))))
 					for cur_ctx = (car (cdr (reverse match_result)))
@@ -283,7 +290,7 @@
 					collect (handler-case (list 
 						(multiple-apply (construction-action construction) 
 							(flatten-variable variable_value constraint))   
-						tag *context* (copy-tree *referral*)) (t nil)))))))
+						tag *context* (copy-tree *referral*)) (t nil))))))))
 		(setf *referral* before-ref-context)
 		(in-context before-context)
 		(loop for r in result
