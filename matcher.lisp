@@ -106,7 +106,9 @@
 					for new_ctx = 
 						(meet-constraint element constraints parents context t verbose)
 					when (not (null new_ctx))
-					collect (list element new_ctx ref-context)))))
+					collect (progn
+						(if verbose (commentary "Match ~S with ~S" text element))
+						(list element new_ctx ref-context))))))
 
 			(if (not (null result)) result
 				(if (might-be-name text constraints)

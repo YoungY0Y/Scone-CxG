@@ -68,7 +68,7 @@
 (new-indv {give} {transitive action with recipient}
 	:english '(:verb "gives" "gave" "giving"))
 
-(new-indv {arrive} {intransitive active} :english 
+(new-indv {arrive} {intransitive action} :english 
 	'(:verb "arrives" "arrived" "arriving"))
 (new-indv {sit} {intransitive action} :english '(:verb "sits" "sat" "sitting"))
 (new-indv {leave} {intransitive action} :english '(:verb "leaves" "left" "leaving"))
@@ -95,6 +95,8 @@
 	      :b-inst-of {person}
 	      :symmetric t
 	      :english '("teammate" "teammates"))
+
+(english {friend of} :relation "friend" "friends")
 
 (new-type {basketball player} {person}
 		  :english '("basketball player" "basketball players"))

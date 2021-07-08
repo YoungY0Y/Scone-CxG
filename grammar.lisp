@@ -350,6 +350,19 @@
 				    collect (new-statement (nth i ?x) ?y (nth j ?x)))))
 	:doc "state verb relation teammate")
 
+(new-construction
+	:variables ((?x {person} :list) (?y {friend of} :relation)) 
+	:pattern (?x ("are") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (let ((len (length ?x)))
+				(if (< len 2) (error 'grammar-error 
+					:message "not enough agent to support the relation"))
+				(loop for i from 0 to (- len 2)
+		       append (loop for j from (+ i 1) to (- len 1)
+				    collect (new-statement (nth i ?x) ?y (nth j ?x)))))
+	:doc "state verb relation friend")
+
 
 
 
