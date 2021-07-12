@@ -46,7 +46,6 @@
 		(null (find :adj constraints))
 		(null (find :type constraints))))
 
-
 (defun meet-constraint (element constraints parents ctx if_new_ctx verbose)
 	"The function takes in an element, the constraints for the variable, 
 	the parents for the variable, context of the element and whether
@@ -98,7 +97,9 @@
 					when (not (null new_ctx))
 					collect (progn
 						(if verbose (commentary "Match ~S with ~S" text element))
-						(list element new_ctx (copy-tree *referral*))))
+						(if (might-be-name text constraints)
+							(list element new_ctx (append (list element) (copy-tree *referral*)))
+							(list element new_ctx (copy-tree *referral*)))))
 				(loop for element_pair in (constructor text syntax_tag verbose)
 					for element = (car element_pair)
 					for context = (nth 2 element_pair)
@@ -108,7 +109,12 @@
 					when (not (null new_ctx))
 					collect (progn
 						(if verbose (commentary "Match ~S with ~S" text element))
-						(list element new_ctx ref-context))))))
+						(if (and (typep element 'cons)
+								(not (loop for ele in element
+										when (null (indv-node? ele))
+										return T)))
+							(list element new_ctx (append (list element) ref-context))
+							(list element new_ctx ref-context)))))))
 
 			(if (not (null result)) result
 				(if (might-be-name text constraints)

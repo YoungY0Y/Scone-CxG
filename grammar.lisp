@@ -99,7 +99,7 @@
 	:ret-tag :noun
 	:modifier NIL
 	:action (let ((new_node (new-indv NIL ?x)))
-			  	(add-np-to-referral ?x new_node)
+			  	(add-np-to-referral new_node)
 				new_node)
 	:doc "np new individual")
 
@@ -110,7 +110,7 @@
 	:modifier NIL
 	:action (let ((new_node (new-indv NIL ?y)))
 			  	(new-is-a new_node ?x)
-			  	(add-np-to-referral ?y new_node)
+			  	(add-np-to-referral new_node)
 				new_node)
 	:doc "np new individual with adj")
 
@@ -121,29 +121,33 @@
 	:modifier NIL
 	:action (let ((new_node (new-type NIL ?y)))
 			  	(x-is-the-y-of-z ?x {count} ?y)
-			  	(add-np-to-referral ?y new_node)
+			  	(add-np-to-referral new_node)
 				new_node)
 	:doc "np new individual plural")
 
 (defvar *referral* NIL)
 
-(defun add-np-to-referral (np np_ele)
+(defun add-np-to-referral (np_ele)
 	"The function takes in noun element and its children (new indv) element
 	and add the mapping to the *referral* dict."
-	(setq try-find (assoc np *referral* :test #'simple-is-x-eq-y?))
-	(if (null try-find) 
-		(push (cons np (list np_ele)) *referral*)
-		(setf (cdr (assoc np *referral* :test #'simple-is-x-eq-y?)) 
-			(append (list np_ele) (copy-list (cdr try-find))))))
+	(push np_ele *referral*))
+	; (setq try-find (assoc np *referral* :test #'simple-is-x-eq-y?))
+	; (if (null try-find) 
+	; 	(push (cons np (list np_ele)) *referral*)
+	; 	(setf (cdr (assoc np *referral* :test #'simple-is-x-eq-y?)) 
+	; 		(append (list np_ele) (copy-list (cdr try-find))))))
 
 (new-construction 
 	:variables ((?x :noun :type))
 	:pattern (("the") ?x)
 	:ret-tag :noun
 	:modifier NIL
-	:action (let ((try-find (assoc ?x *referral* :test #'simple-is-x-eq-y?)))
-				(if (not (null try-find)) (car (cdr try-find))
-				(error 'grammar-error :message "cannot find the referral noun")))
+	:action (loop for np_ele in *referral*
+				when (simple-is-x-a-y? np_ele ?x)
+				return np_ele)
+			; (let ((try-find (assoc ?x *referral* :test #'simple-is-x-eq-y?)))
+			; 	(if (not (null try-find)) (car (cdr try-find))
+			; 	(error 'grammar-error :message "cannot find the referral noun")))
 	:doc "np referral individual")
 
 (new-construction
