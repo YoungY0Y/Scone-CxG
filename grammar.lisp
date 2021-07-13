@@ -128,7 +128,8 @@
 (defvar *referral* NIL)
 
 (defun ele_or_list_equal (ele1 ele2)
-	""
+	"take in two elements where each one could be either scone element
+	or a list of scone element, return if they are equal"
 	(if (null (equal (type-of ele1) (type-of ele2))) NIL
 		(if (typep ele1 'element) (simple-is-x-eq-y? ele1 ele2)
 			(if (null (equal (length ele1) (length ele2))) NIL
@@ -137,7 +138,8 @@
 					return T))))))
 
 (defun remove-dup (ele ele_list)
-	""
+	"take in an element and a list, remove the duplicate of the 
+	element in the list if exist"
 	(if (null ele_list) NIL
 	(if (ele_or_list_equal ele (car ele_list))
 		(cdr ele_list)

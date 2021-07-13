@@ -81,6 +81,47 @@
 						(in-context before_context)
 						new_ctx) (t nil))))))))
 
+(defun pronoun-match (text syntax_tag)
+	"take in a text and return the noun it refers to if it is a pronoun"
+	(if (not (and (null (find :verb syntax_tag)) (null (find :adj syntax_tag)))) NIL
+
+	(cond ((or (equal text "he") (equal text "him"))
+				(loop for ele in *referral*
+					when (and (typep ele 'element)
+							(not (equal (is-x-a-y? ele {male person}) :NO)))
+					collect (let ((before_context *context*)
+								  (new_ctx (new-context NIL *context*)))
+								(in-context new_ctx)
+								(new-is-a ele {male person})
+								(in-context before_context)
+								(list ele new_ctx))))
+		((or (equal text "she") (equal text "her"))
+				(loop for ele in *referral*
+					when (and (typep ele 'element)
+							(not (equal (is-x-a-y? ele {female person}) :NO)))
+					collect (let ((before_context *context*)
+								  (new_ctx (new-context NIL *context*)))
+								(in-context new_ctx)
+								(new-is-a ele {female person})
+								(in-context before_context)
+								(list ele new_ctx))))
+		((equal text "it") 
+				(loop for ele in *referral*
+					when (and (typep ele 'element)
+							(not (equal (is-x-a-y? ele {person}) :YES)))
+					collect (let ((before_context *context*)
+								  (new_ctx (new-context NIL *context*)))
+								(in-context new_ctx)
+								(new-is-not-a ele {person})
+								(in-context before_context)
+								(list ele new_ctx))))
+
+		((or (equal text "they") (equal text "them"))
+				(loop for ele in *referral*
+					when (or (typep ele 'cons) (type-node? ele))
+					collect (list ele *context*)))
+		(t NIL))))
+
 (defun variable-match (text constraints verbose)
 	"The function takes in a raw text and a list of constraints
 	for the variable, returns the matched scone elements that
@@ -116,7 +157,17 @@
 										return T)))
 							(list element new_ctx (append (list element) 
 													(remove-dup element ref-context)))
-							(list element new_ctx ref-context)))))))
+							(list element new_ctx ref-context))))
+
+				(loop for element_pair in (pronoun-match text syntax_tag)
+					for element = (car element_pair)
+					for context = (nth 1 element_pair)
+					for new_ctx = 
+						(meet-constraint element constraints parents context t verbose)
+					when (not (null new_ctx))
+					collect (progn
+						(if verbose (commentary "Match ~S with ~S" text element))
+						(list element new_ctx (copy-tree *referral*)))))))
 
 			(if (not (null result)) result
 				(if (might-be-name text constraints)
