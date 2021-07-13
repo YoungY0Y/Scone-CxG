@@ -98,7 +98,8 @@
 					collect (progn
 						(if verbose (commentary "Match ~S with ~S" text element))
 						(if (might-be-name text constraints)
-							(list element new_ctx (append (list element) (copy-tree *referral*)))
+							(list element new_ctx (append (list element) 
+											(remove-dup element (copy-tree *referral*))))
 							(list element new_ctx (copy-tree *referral*)))))
 				(loop for element_pair in (constructor text syntax_tag verbose)
 					for element = (car element_pair)
@@ -113,7 +114,8 @@
 								(not (loop for ele in element
 										when (null (indv-node? ele))
 										return T)))
-							(list element new_ctx (append (list element) ref-context))
+							(list element new_ctx (append (list element) 
+													(remove-dup element ref-context)))
 							(list element new_ctx ref-context)))))))
 
 			(if (not (null result)) result
@@ -127,7 +129,8 @@
 						(loop for parent in parents
 							do (new-is-a new_node parent))
 						(in-context before_context)
-						(list (list new_node new_ctx (copy-tree *referral*))))
+						(list (list new_node new_ctx (append (list new_node) 
+											(remove-dup new_node (copy-tree *referral*))))))
 					(t nil)))))))
 
 (defun one-ele-match (text pattern var_constraint verbose)

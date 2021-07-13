@@ -127,10 +127,26 @@
 
 (defvar *referral* NIL)
 
+(defun ele_or_list_equal (ele1 ele2)
+	""
+	(if (null (equal (type-of ele1) (type-of ele2))) NIL
+		(if (typep ele1 'element) (simple-is-x-eq-y? ele1 ele2)
+			(if (null (equal (length ele1) (length ele2))) NIL
+				(not (loop for ele in ele1
+					when (null (find ele ele2 :test #'simple-is-x-eq-y?))
+					return T))))))
+
+(defun remove-dup (ele ele_list)
+	""
+	(if (null ele_list) NIL
+	(if (ele_or_list_equal ele (car ele_list))
+		(cdr ele_list)
+		(append (list (car ele_list)) (remove-dup ele (cdr ele_list))))))
+
 (defun add-np-to-referral (np_ele)
 	"The function takes in noun element and its children (new indv) element
 	and add the mapping to the *referral* dict."
-	(push np_ele *referral*))
+	(setf *referral* (append (list np_ele) (remove-dup np_ele *referral*))))
 	; (setq try-find (assoc np *referral* :test #'simple-is-x-eq-y?))
 	; (if (null try-find) 
 	; 	(push (cons np (list np_ele)) *referral*)
