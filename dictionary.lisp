@@ -20,6 +20,7 @@
 (new-type {mouse} {animal} :english '("mouse" "mice"))
 (new-type {computer mouse} {man-made object} :english '("mouse" "mice"))
 
+(english {mammal} :iname "mammals")
 (english {elephant} :iname "elephants")
 (english {dog} :iname "dogs")
 
@@ -51,6 +52,8 @@
 
 (new-string-number "one" {1})
 (new-string-number "two" {2})
+(new-string-number "three" {3})
+(new-string-number "four" {4})
 (new-string-number "a dozen of" {12})
 
 ;;; ------------------------------------------------------------------------
@@ -101,7 +104,11 @@
 (new-type {basketball player} {person}
 		  :english '("basketball player" "basketball players"))
 
-(new-type {red thing} {thing} :english '(:no-iname :adj "red"))
+(new-type {colored thing} {tangible} :english '(:no-iname :adj "colored"))
+(new-type-role {predominant color} {tangible} {colored thing})
+
+(new-type {red thing} {colored thing} :english '(:no-iname :adj "red"))
+(new-type {gray thing} {colored thing} :english '(:no-iname :adj "gray" "grey"))
 (new-type {smart thing} {thing} :english '(:no-iname :adj "smart"))
 (new-type {tall animal} {animal} :english '(:no-iname :adj "tall"))
 

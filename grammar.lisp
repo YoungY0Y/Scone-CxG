@@ -130,12 +130,16 @@
 (defun ele_or_list_equal (ele1 ele2)
 	"take in two elements where each one could be either scone element
 	or a list of scone element, return if they are equal"
-	(if (null (equal (type-of ele1) (type-of ele2))) NIL
-		(if (typep ele1 'element) (simple-is-x-eq-y? ele1 ele2)
-			(if (null (equal (length ele1) (length ele2))) NIL
+	(cond 
+		((and (or (typep ele1 'element) (typep ele1 'element-iname)) 
+			  (or (typep ele2 'element) (typep ele2 'element-iname)))  
+		 (simple-is-x-eq-y? ele1 ele2))
+		((and (typep ele1 'cons) (typep ele1 'cons)) 
+		 (if (null (equal (length ele1) (length ele2))) NIL
 				(not (loop for ele in ele1
 					when (null (find ele ele2 :test #'simple-is-x-eq-y?))
-					return T))))))
+					return T))))
+		(t NIL)))
 
 (defun remove-dup (ele ele_list)
 	"take in an element and a list, remove the duplicate of the 
@@ -329,7 +333,7 @@
 
 (new-construction 
 	:variables ((?x :noun) (?y :noun :type))
-	:pattern (?x ("is a" "is an") ?y)
+	:pattern (?x ("is a" "is an" "is a kind of") ?y)
 	:ret-tag :relation
 	:modifier NIL
 	:action (new-is-a ?x ?y)
@@ -358,6 +362,14 @@
 	:modifier NIL
 	:action (new-eq ?x ?y)
 	:doc "state verb indv")
+
+(new-construction
+	:variables ((?x :type) (?y) (?z))
+	:pattern (("the") ?x ("of") ?y ("is" "are") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (x-is-the-y-of-z ?z ?x ?y)
+	:doc "create the y of z")
 
 (new-construction
 	:variables ((?x {person} :list) (?y {teammate of} :relation)) 
