@@ -344,6 +344,19 @@
 			(+ 1 (context-occurance ctx (cdr match_results)))
 			(context-occurance ctx (cdr match_results)))))
 
+(defun pre-selection (text pattern)
+	"the function takes in a d raw text and a pattern list of a construction
+	and returns if the text has the strings in the pattern"
+	(let ((pad_text (concatenate 'string " " text " ")))
+		(if (null pattern) T
+			(and 
+			(if (typep (car pattern) 'cons) 
+				(loop for phrase in (car pattern)
+					when (not (null (search (concatenate 'string " " phrase " ") pad_text)))
+					return T)
+				T)
+			(pre-selection text (cdr pattern))))))
+
 (defun constructor (text &optional taglist verbose)
 	"the function takes in raw text and optional syntax tags 
 	and applies matched constructions actions on it, return the
@@ -356,10 +369,10 @@
 		for constraint = (construction-var-constraint construction)
 		for modifier = (construction-modifier construction)
 		for tag = (construction-tag construction)
-		do (if (> (length text) 40) (progn (print pattern) (print constraint)))
 		do (setf *referral* before-ref-context)
 		do (in-context before-context)
-		when (and (not (null (construction-match-checker 
+		when (and (pre-selection text pattern)
+			(not (null (construction-match-checker 
 						(tokenizer text) pattern constraint)))
 			(or (null taglist) (find tag taglist)))
 		append 
