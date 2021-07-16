@@ -167,9 +167,6 @@
 	:action (loop for np_ele in *referral*
 				when (simple-is-x-a-y? np_ele ?x)
 				return np_ele)
-			; (let ((try-find (assoc ?x *referral* :test #'simple-is-x-eq-y?)))
-			; 	(if (not (null try-find)) (car (cdr try-find))
-			; 	(error 'grammar-error :message "cannot find the referral noun")))
 	:doc "np referral individual")
 
 (new-construction
