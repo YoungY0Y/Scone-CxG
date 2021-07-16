@@ -31,7 +31,7 @@
 	"The function takes in a list of variable constraints
 	and returns the scone elements in it."
 	(loop for constraint in constraints
-		when (typep constraint 'element-iname)
+		when (or (typep constraint 'element-iname) (typep constraint 'element))
 		collect constraint))
 
 (defun might-be-name (text constraints)
@@ -83,11 +83,12 @@
 
 (defun pronoun-match (text syntax_tag)
 	"take in a text and return the noun it refers to if it is a pronoun"
-	(if (not (and (null (find :verb syntax_tag)) (null (find :adj syntax_tag)))) NIL
+	(if (not (and (null (find :verb syntax_tag)) (null (find :adj syntax_tag))
+		(null (find :relation syntax_tag)))) NIL
 
 	(cond ((or (equal text "he") (equal text "him"))
 				(loop for ele in *referral*
-					when (and (typep ele 'element)
+					when (and (or (typep ele 'element) (typep ele 'element-iname))
 							(not (equal (is-x-a-y? ele {male person}) :NO)))
 					collect (let ((before_context *context*)
 								  (new_ctx (new-context NIL *context*)))
@@ -97,7 +98,7 @@
 								(list ele new_ctx))))
 		((or (equal text "she") (equal text "her"))
 				(loop for ele in *referral*
-					when (and (typep ele 'element)
+					when (and (or (typep ele 'element) (typep ele 'element-iname))
 							(not (equal (is-x-a-y? ele {female person}) :NO)))
 					collect (let ((before_context *context*)
 								  (new_ctx (new-context NIL *context*)))
@@ -107,7 +108,7 @@
 								(list ele new_ctx))))
 		((equal text "it") 
 				(loop for ele in *referral*
-					when (and (typep ele 'element)
+					when (and (or (typep ele 'element) (typep ele 'element-iname))
 							(not (equal (is-x-a-y? ele {person}) :YES)))
 					collect (let ((before_context *context*)
 								  (new_ctx (new-context NIL *context*)))
@@ -196,8 +197,8 @@
 	a list of variable constraints return if the list of word 
 	could match the pattern."
 	(let ((before_ref_context (copy-tree *referral*))
-		  (before_context *context*)
-		(result
+		  (before_context *context*))
+	(let ((result
 	(cond 
 		((and (null pattern_list) (null wordlist)) T)
 		((or (null pattern_list) (null wordlist) 
@@ -205,16 +206,31 @@
 		(T (loop for i from 1 to 
 					(+ (- (length wordlist) (length pattern_list)) 1)
 			for text = (join_list_by_space (sublst wordlist 0 i))
+			for first_element_result = (progn 
+				(setf *referral* before_ref_context)
+				(in-context before_context)
+				(one-ele-match text (car pattern_list) var_constraint NIL))
 			when (and 
-				(not (null (one-ele-match text (car pattern_list) var_constraint NIL))) 
-				(construction-match-checker 
-					(sublst wordlist i (- (length wordlist) i)) 
-								(cdr pattern_list) var_constraint))
-			return T)))
-	))
+				(not (null first_element_result)) 
+				(if (typep first_element_result 'string) 
+					(construction-match-checker 
+						(sublst wordlist i (- (length wordlist) i)) 
+						(cdr pattern_list) var_constraint)
+					(loop for ele_pair in first_element_result
+						for ele = (car ele_pair)
+						for ref-ctx = (nth 2 ele_pair)
+						for ctx = (nth 1 ele_pair)
+						when (progn 
+							(setf *referral* ref-ctx)
+							(in-context ctx)
+							(construction-match-checker 
+								(sublst wordlist i (- (length wordlist) i)) 
+											(cdr pattern_list) var_constraint))
+						return T)))
+			return T)))))
 	(setf *referral* before_ref_context)
 	(in-context before_context)
-	result))
+	result)))
 
 (defun base-case-matcher (len)
 	"the function takes in the length, and return the base case
@@ -228,6 +244,13 @@
 	changes the ith element to the new content and returns the list"
 	(setf (nth i l) new_content)
 	l)
+
+(defun remove-null (l)
+	"the function takes in a list, remove the null element and 
+	return the new list"
+	(loop for ele in l 
+		when (not (null ele))
+		collect ele))
 
 (defun construction-matcher (wordlist pattern_list var_constraint verbose)
 	"The main matcher function that takes in a wordlist, a pattern list and 
@@ -245,15 +268,14 @@
 			for text = (join_list_by_space (sublst wordlist 0 i))
 			for first_element_result = 
 				(one-ele-match text (car pattern_list) var_constraint verbose)
-			when (and 
-				(not (null first_element_result)) 
-				(construction-match-checker 
-					(sublst wordlist i (- (length wordlist) i)) 
-					(cdr pattern_list) var_constraint))
+			when (not (null first_element_result)) 
 			append 
 				(if (typep first_element_result 'string) 
+					(if (construction-match-checker 
+							(sublst wordlist i (- (length wordlist) i)) 
+							(cdr pattern_list) var_constraint)
 					(construction-matcher (sublst wordlist i (- (length wordlist) i)) 
-						(cdr pattern_list) var_constraint verbose)
+						(cdr pattern_list) var_constraint verbose))
 		
 					(loop for ele_pair in first_element_result
 						for ele = (car ele_pair)
@@ -262,15 +284,18 @@
 						append (progn 
 							(setf *referral* ref-ctx)
 							(in-context ctx)
-							(loop for rest_ele in 
-								(construction-matcher 
+							(if (construction-match-checker 
 									(sublst wordlist i (- (length wordlist) i)) 
-									(cdr pattern_list) var_constraint verbose)
-							collect (change-ith-list 
-										rest_ele (car pattern_list) ele)))))))))
+									(cdr pattern_list) var_constraint)
+								(loop for rest_ele in 
+									(construction-matcher 
+										(sublst wordlist i (- (length wordlist) i)) 
+										(cdr pattern_list) var_constraint verbose)
+								collect (change-ith-list 
+											rest_ele (car pattern_list) ele))))))))))
 	(setf *referral* before_ref_context)
 	(in-context before_context)
-	result))
+	(remove-null result)))
 
 ;;; -----------------------------------------------------------------------------------
 ;;; Constructor
@@ -331,6 +356,7 @@
 		for constraint = (construction-var-constraint construction)
 		for modifier = (construction-modifier construction)
 		for tag = (construction-tag construction)
+		do (if (> (length text) 40) (progn (print pattern) (print constraint)))
 		do (setf *referral* before-ref-context)
 		do (in-context before-context)
 		when (and (not (null (construction-match-checker 

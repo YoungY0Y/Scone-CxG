@@ -72,6 +72,7 @@
 		(if (not (null construction-result))
 			(progn
 				(setq ele (nth 0 (car construction-result)))
+				(commentary "Take result ~S" ele)
 				(setq tag (nth 1 (car construction-result)))
 				(setq ctx (nth 2 (car construction-result)))
 				(setq ref_ctx (nth 3 (car construction-result)))

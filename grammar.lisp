@@ -134,7 +134,7 @@
 		((and (or (typep ele1 'element) (typep ele1 'element-iname)) 
 			  (or (typep ele2 'element) (typep ele2 'element-iname)))  
 		 (simple-is-x-eq-y? ele1 ele2))
-		((and (typep ele1 'cons) (typep ele1 'cons)) 
+		((and (typep ele1 'cons) (typep ele2 'cons)) 
 		 (if (null (equal (length ele1) (length ele2))) NIL
 				(not (loop for ele in ele1
 					when (null (find ele ele2 :test #'simple-is-x-eq-y?))
@@ -203,6 +203,14 @@
 	:modifier NIL
 	:action (append (list ?x) ?y)
 	:doc "adj parallel structure")
+
+(new-construction
+	:variables ((?x :relation) (?y :relation))
+	:pattern (?x ("and") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (list ?x ?y)
+	:doc "relation parallel structure")
 
 ;;; ------------------------------------------------------------------------
 ;;; VP
@@ -332,19 +340,61 @@
 	:doc "state believe")
 
 (new-construction 
-	:variables ((?x :noun) (?y :noun :type))
-	:pattern (?x ("is a" "is an" "is a kind of") ?y)
-	:ret-tag :relation
-	:modifier NIL
-	:action (new-is-a ?x ?y)
-	:doc "create new is a")
-
-(new-construction 
 	:variables ((?x :noun) (?y :adj))
 	:pattern (?x ("is" "are") ?y)
 	:ret-tag :relation
 	:modifier NIL
 	:action (new-is-a ?x ?y)
+	:doc "state verb adj")
+
+(new-construction 
+	:variables ((?x :noun) (?y :adj))
+	:pattern (?x ("is not" "are not") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (new-is-not-a ?x ?y)
+	:doc "state verb adj")
+
+(new-construction 
+	:variables ((?x :noun) (?y :adj) (?z :adj))
+	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (list (new-is-a ?x ?y) (new-is-not-a ?x ?z))
+	:doc "state verb adj")
+
+(new-construction 
+	:variables ((?x :noun) (?y :adj :list) (?z :adj))
+	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (append
+				(loop for adjy in ?y
+					collect (new-is-a ?x adjy))
+				(list (new-is-not-a ?x ?z)))
+	:doc "state verb adj")
+
+(new-construction 
+	:variables ((?x :noun) (?y :adj) (?z :adj :list))
+	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (append
+				(list (new-is-a ?x ?y))
+				(loop for adjz in ?z
+					collect (new-is-not-a ?x adjz)))
+	:doc "state verb adj")
+
+(new-construction 
+	:variables ((?x :noun) (?y :adj :list) (?z :adj :list))
+	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (append
+				(loop for adjy in ?y
+					collect (new-is-a ?x adjy))
+				(loop for adjz in ?z
+					collect (new-is-not-a ?x adjz)))
 	:doc "state verb adj")
 
 (new-construction 
@@ -356,12 +406,78 @@
 	:doc "state verb type")
 
 (new-construction 
+	:variables ((?x :noun) (?y :noun :type))
+	:pattern (?x ("is not" "are not") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (new-is-not-a ?x ?y)
+	:doc "state verb type")
+
+(new-construction 
+	:variables ((?x :noun) (?y :noun :type) (?z :noun :type))
+	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (list (new-is-a ?x ?y) (new-is-not-a ?x ?z))
+	:doc "state verb adj")
+
+(new-construction 
+	:variables ((?x :noun) (?y :noun :type :list) (?z :noun :type))
+	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (append
+				(loop for ny in ?y
+					collect (new-is-a ?x ny))
+				(list (new-is-not-a ?x ?z)))
+	:doc "state verb adj")
+
+(new-construction 
+	:variables ((?x :noun) (?y :noun :type) (?z :noun :type :list))
+	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (append
+				(list (new-is-a ?x ?y))
+				(loop for nz in ?z
+					collect (new-is-not-a ?x nz)))
+	:doc "state verb adj")
+
+(new-construction 
+	:variables ((?x :noun) (?y :noun :type :list) (?z :noun :type :list))
+	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (append
+				(loop for ny in ?y
+					collect (new-is-a ?x ny))
+				(loop for nz in ?z
+					collect (new-is-not-a ?x nz)))
+	:doc "state verb adj")
+
+(new-construction 
 	:variables ((?x :noun) (?y :noun :indv))
 	:pattern (?x ("is") ?y)
 	:ret-tag :relation
 	:modifier NIL
 	:action (new-eq ?x ?y)
 	:doc "state verb indv")
+
+(new-construction 
+	:variables ((?x :noun) (?y :noun :type))
+	:pattern (?x ("is a" "is an" "is a kind of") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (new-is-a ?x ?y)
+	:doc "create new is a")
+
+(new-construction 
+	:variables ((?x :noun) (?y :noun :type))
+	:pattern (?x ("is not a" "is not an" "is not a kind of") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (new-is-not-a ?x ?y)
+	:doc "create new is not a")
 
 (new-construction
 	:variables ((?x :type) (?y) (?z))
