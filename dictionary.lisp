@@ -44,12 +44,12 @@
 
 (new-integer-range "some" 2 NIL)
 
-(defun new-string-number (name number_node)
+(defun new-string-number (name number-node)
 	"the function takes in a string name and a number node
 	then creates a new number node with that name."
-	(let ((new_node (new-indv name {exact number})))
-		(new-eq new_node number_node)
-		new_node))
+	(let ((new-node (new-indv name {exact number})))
+		(new-eq new-node number-node)
+		new-node))
 
 (new-string-number "one" {1})
 (new-string-number "two" {2})

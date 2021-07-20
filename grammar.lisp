@@ -98,9 +98,9 @@
 	:pattern (("a" "an") ?x)
 	:ret-tag :noun
 	:modifier NIL
-	:action (let ((new_node (new-indv NIL ?x)))
-			  	(add-np-to-referral new_node)
-				new_node)
+	:action (let ((new-node (new-indv NIL ?x)))
+			  	(add-np-to-referral new-node)
+				new-node)
 	:doc "np new individual")
 
 (new-construction 
@@ -108,10 +108,10 @@
 	:pattern (("a" "an") ?x ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action (let ((new_node (new-indv NIL ?y)))
-			  	(new-is-a new_node ?x)
-			  	(add-np-to-referral new_node)
-				new_node)
+	:action (let ((new-node (new-indv NIL ?y)))
+			  	(new-is-a new-node ?x)
+			  	(add-np-to-referral new-node)
+				new-node)
 	:doc "np new individual with adj")
 
 (new-construction 
@@ -119,15 +119,15 @@
 	:pattern (?x ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action (let ((new_node (new-type NIL ?y)))
+	:action (let ((new-node (new-type NIL ?y)))
 			  	(x-is-the-y-of-z ?x {count} ?y)
-			  	(add-np-to-referral new_node)
-				new_node)
+			  	(add-np-to-referral new-node)
+				new-node)
 	:doc "np new individual plural")
 
 (defvar *referral* NIL)
 
-(defun ele_or_list_equal (ele1 ele2)
+(defun ele-or-list-equal (ele1 ele2)
 	"take in two elements where each one could be either scone element
 	or a list of scone element, return if they are equal"
 	(cond 
@@ -141,32 +141,32 @@
 					return T))))
 		(t NIL)))
 
-(defun remove-dup (ele ele_list)
+(defun remove-dup (ele ele-list)
 	"take in an element and a list, remove the duplicate of the 
 	element in the list if exist"
-	(if (null ele_list) NIL
-	(if (ele_or_list_equal ele (car ele_list))
-		(cdr ele_list)
-		(append (list (car ele_list)) (remove-dup ele (cdr ele_list))))))
+	(if (null ele-list) NIL
+	(if (ele-or-list-equal ele (car ele-list))
+		(cdr ele-list)
+		(append (list (car ele-list)) (remove-dup ele (cdr ele-list))))))
 
-(defun add-np-to-referral (np_ele)
+(defun add-np-to-referral (np-ele)
 	"The function takes in noun element and its children (new indv) element
 	and add the mapping to the *referral* dict."
-	(setf *referral* (append (list np_ele) (remove-dup np_ele *referral*))))
+	(setf *referral* (append (list np-ele) (remove-dup np-ele *referral*))))
 	; (setq try-find (assoc np *referral* :test #'simple-is-x-eq-y?))
 	; (if (null try-find) 
-	; 	(push (cons np (list np_ele)) *referral*)
+	; 	(push (cons np (list np-ele)) *referral*)
 	; 	(setf (cdr (assoc np *referral* :test #'simple-is-x-eq-y?)) 
-	; 		(append (list np_ele) (copy-list (cdr try-find))))))
+	; 		(append (list np-ele) (copy-list (cdr try-find))))))
 
 (new-construction 
 	:variables ((?x :noun :type))
 	:pattern (("the") ?x)
 	:ret-tag :noun
 	:modifier NIL
-	:action (loop for np_ele in *referral*
-				when (simple-is-x-a-y? np_ele ?x)
-				return np_ele)
+	:action (loop for np-ele in *referral*
+				when (simple-is-x-a-y? np-ele ?x)
+				return np-ele)
 	:doc "np referral individual")
 
 (new-construction
@@ -219,10 +219,10 @@
 	:pattern (?x ?y ?z)
 	:ret-tag :verb
 	:modifier NIL
-	:action (let ((new_v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new_v)
-			  	(x-is-the-y-of-z ?z {action object} new_v)
-				new_v)
+	:action (let ((new-v (new-indv NIL ?y)))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z ?z {action object} new-v)
+				new-v)
 	:doc "transitive action kick")
 
 (new-construction
@@ -232,10 +232,10 @@
 	:pattern (?x ?y ?z)
 	:ret-tag :verb
 	:modifier NIL
-	:action (let ((new_v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new_v)
-			  	(x-is-the-y-of-z ?z {action object} new_v)
-				new_v)
+	:action (let ((new-v (new-indv NIL ?y)))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z ?z {action object} new-v)
+				new-v)
 	:doc "transitive action hit")
 
 (new-construction
@@ -245,10 +245,10 @@
 	:pattern (?x ?y ?z)
 	:ret-tag :verb
 	:modifier NIL
-	:action (let ((new_v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new_v)
-			  	(x-is-the-y-of-z ?z {action object} new_v)
-				new_v)
+	:action (let ((new-v (new-indv NIL ?y)))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z ?z {action object} new-v)
+				new-v)
 	:doc "transitive action eat")
 
 (new-construction
@@ -258,10 +258,10 @@
 	:pattern (?x ?y ?z)
 	:ret-tag :verb
 	:modifier NIL
-	:action (let ((new_v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new_v)
-			  	(x-is-the-y-of-z ?z {action object} new_v)
-				new_v)
+	:action (let ((new-v (new-indv NIL ?y)))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z ?z {action object} new-v)
+				new-v)
 	:doc "transitive action leave")
 
 (new-construction
@@ -271,10 +271,10 @@
 	:pattern (?x ?y ?z)
 	:ret-tag :verb
 	:modifier NIL
-	:action (let ((new_v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new_v)
-			  	(x-is-the-y-of-z ?z {action object} new_v)
-				new_v)
+	:action (let ((new-v (new-indv NIL ?y)))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z ?z {action object} new-v)
+				new-v)
 	:doc "transitive action person make")
 
 (new-construction
@@ -285,11 +285,11 @@
 	:pattern (?x ?y ?z ?w)
 	:ret-tag :verb
 	:modifier NIL
-	:action (let ((new_v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new_v)
-			  	(x-is-the-y-of-z ?z {action recipient} new_v)
-			  	(x-is-the-y-of-z ?w {action object} new_v)
-				new_v)
+	:action (let ((new-v (new-indv NIL ?y)))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z ?z {action recipient} new-v)
+			  	(x-is-the-y-of-z ?w {action object} new-v)
+				new-v)
 	:doc "transitive action with recipient give")
 
 (new-construction
@@ -298,9 +298,9 @@
 	:pattern (?x ?y)
 	:ret-tag :verb
 	:modifier NIL
-	:action (let ((new_v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new_v)
-				new_v)
+	:action (let ((new-v (new-indv NIL ?y)))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+				new-v)
 	:doc "intransitive action arrive")
 
 (new-construction
@@ -309,9 +309,9 @@
 	:pattern (?x ?y)
 	:ret-tag :verb
 	:modifier NIL
-	:action (let ((new_v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new_v)
-				new_v)
+	:action (let ((new-v (new-indv NIL ?y)))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+				new-v)
 	:doc "intransitive action sit")
 
 (new-construction
