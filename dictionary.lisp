@@ -5,7 +5,6 @@
 ;;; Author: Yang Yang
 ;;; ***************************************************************************
 
-
 (new-type {apple} {natural object} :english '("apples"))
 (new-type {banana} {natural object} :english '("bananas"))
 (new-type {leaf} {natural object} :english '("leaves"))
@@ -19,6 +18,8 @@
 
 (new-type {mouse} {animal} :english '("mouse" "mice"))
 (new-type {computer mouse} {man-made object} :english '("mouse" "mice"))
+
+(new-type {technology company} {company})
 
 (english {mammal} :iname "mammals")
 (english {elephant} :iname "elephants")
@@ -104,16 +105,44 @@
 (new-type {basketball player} {person}
 		  :english '("basketball player" "basketball players"))
 
-(new-type {colored thing} {tangible} :english '(:no-iname :adj "colored"))
-(new-type-role {predominant color} {tangible} {colored thing})
+;;; ------------------------------------------------------------------------
+;;; Adj
 
-(new-type {red thing} {colored thing} :english '(:no-iname :adj "red"))
-(new-type {gray thing} {colored thing} :english '(:no-iname :adj "gray" "grey"))
 (new-type {smart thing} {thing} :english '(:no-iname :adj "smart"))
 (new-type {tall animal} {animal} :english '(:no-iname :adj "tall"))
 
+;;; Color
+
+(new-type {color} {tangible})
+(new-type {colored thing} {tangible} :english '(:no-iname :adj "colored"))
+(new-type-role {predominant color} {colored thing} {color} :english '("color"))
+
+(new-type {red thing} {colored thing} :english '(:no-iname :adj "red"))
+(new-indv {red} {color})
+(x-is-the-y-of-z {red} {predominant color} {red thing})
+
+(new-type {gray thing} {colored thing} :english '(:no-iname :adj "gray" "grey"))
+(new-indv {gray} {color})
+(x-is-the-y-of-z {gray} {predominant color} {gray thing})
+
+;;; Country
+
+(new-type-role {belonged country} {thing} {country} :english '("country"))
+
+(new-indv {United States} {country}
+	  :english '("United States"
+		     "United States of America"
+		     "USA"
+		     "America"))
+(new-type {American thing} {thing} :english '(:no-iname :adj "american" "American"))
+(x-is-the-y-of-z {United States} {belonged country} {american thing})
+
+(new-indv {China} {country})
+(new-type {Chinese thing} {thing} :english '(:no-iname :adj "chinese" "Chinese"))
+(x-is-the-y-of-z {China} {belonged country} {Chinese thing})
+
 ;;; ------------------------------------------------------------------------
-;;, prepositional phrase
+;;; prepositional phrase
 
 (new-type-role {action tool} {action} {physical object})
 (new-type-role {person outwear} {person} {cloth})

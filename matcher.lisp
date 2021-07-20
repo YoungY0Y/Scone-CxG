@@ -5,7 +5,6 @@
 ;;; Author: Yang Yang
 ;;; ***************************************************************************
 
-
 (defun sublst (lst idx len)
 	"The function takes in a list, an index and a length,
 	return the sublist of the list starting from the index and
@@ -170,7 +169,7 @@
 						(if verbose (commentary "Match ~S with ~S" text element))
 						(list element new_ctx (copy-tree *referral*)))))))
 
-			(if (not (null result)) result
+			(if (not (and (null result) (null (lookup-definitions text)))) result
 				(if (might-be-name text constraints)
 					(handler-case 
 					(let ((new_node (new-indv text {thing}))

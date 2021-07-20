@@ -477,7 +477,7 @@
 	:doc "create new is not a")
 
 (new-construction
-	:variables ((?x :type) (?y) (?z))
+	:variables ((?x :type) (?y) (?z :noun))
 	:pattern (("the") ?x ("of") ?y ("is" "are") ?z)
 	:ret-tag :relation
 	:modifier NIL
