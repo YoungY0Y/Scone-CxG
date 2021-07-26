@@ -43,7 +43,8 @@
 		(null (find :verb constraints))
 		(null (find :relation constraints))
 		(null (find :adj constraints))
-		(null (find :type constraints))))
+		(null (find :type constraints))
+		(null (find :type-role constraints))))
 
 (defun meet-constraint (element constraints parents ctx if-new-ctx verbose)
 	"The function takes in an element, the constraints for the variable, 
@@ -65,6 +66,7 @@
 						constraints parents next-ctx if-new-ctx verbose))))
 
 			(if (and (or (null (find :type constraints)) (type-node? element))
+				 (or (null (find :type-role constraints)) (type-role-node? element))
 			     (or (null (find :indv constraints)) (indv-node? element))
 			     (not (loop for parent in parents
 					    when (not (simple-is-x-a-y? element parent)) 
@@ -169,7 +171,7 @@
 						(if verbose (commentary "Match ~S with ~S" text element))
 						(list element new-ctx (copy-tree *referral*)))))))
 
-			(if (not (and (null result) (null (lookup-definitions text)))) result
+			(if (not (null result)) result
 				(if (might-be-name text constraints)
 					(handler-case 
 					(let ((new-node (new-indv text {thing}))
@@ -257,16 +259,18 @@
 	of the elements for the variables, the after context
 	and the after referral context."
 	(let ((before-ref-context (copy-tree *referral*))
-		  (before-context *context*)
-		(result
+		  (before-context *context*))
+	(let ((result
 	(if (or (null pattern-list) (null wordlist) 
 			(< (length wordlist) (length pattern-list))) 
 		(list (base-case-matcher (length var-constraint)))
 
 		(loop for i from 1 to (+ (- (length wordlist) (length pattern-list)) 1)
 			for text = (join-list-by-space (sublst wordlist 0 i))
-			for first-element-result = 
-				(one-ele-match text (car pattern-list) var-constraint verbose)
+			for first-element-result = (progn
+				(setf *referral* before-ref-context)
+				(in-context before-context)
+				(one-ele-match text (car pattern-list) var-constraint verbose))
 			when (not (null first-element-result)) 
 			append 
 				(if (typep first-element-result 'string) 
@@ -294,7 +298,7 @@
 											rest-ele (car pattern-list) ele))))))))))
 	(setf *referral* before-ref-context)
 	(in-context before-context)
-	(remove-null result)))
+	(remove-null result))))
 
 ;;; -----------------------------------------------------------------------------------
 ;;; Constructor
@@ -393,7 +397,5 @@
 						tag *context* (copy-tree *referral*)) (t nil))))))))
 		(setf *referral* before-ref-context)
 		(in-context before-context)
-		(loop for r in result
-			when (not (null r))
-			collect r))))
+		(remove-null result))))
 

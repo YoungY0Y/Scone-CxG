@@ -20,6 +20,7 @@
 (new-type {computer mouse} {man-made object} :english '("mouse" "mice"))
 
 (new-type {technology company} {company})
+(new-type-role {founder} {organization} {person})
 
 (english {mammal} :iname "mammals")
 (english {elephant} :iname "elephants")
@@ -129,15 +130,17 @@
 
 (new-type-role {belonged country} {thing} {country} :english '("country"))
 
-(new-indv {United States} {country}
+(new-indv {United States} {country with states}
 	  :english '("United States"
 		     "United States of America"
 		     "USA"
 		     "America"))
 (new-type {American thing} {thing} :english '(:no-iname :adj "american" "American"))
 (x-is-the-y-of-z {United States} {belonged country} {american thing})
+(new-indv {California} {land area})
+(x-is-a-y-of-z {California} {state} {United States})
 
-(new-indv {China} {country})
+(new-indv {China} {country with provinces})
 (new-type {Chinese thing} {thing} :english '(:no-iname :adj "chinese" "Chinese"))
 (x-is-the-y-of-z {China} {belonged country} {Chinese thing})
 
@@ -146,6 +149,8 @@
 
 (new-type-role {action tool} {action} {physical object})
 (new-type-role {person outwear} {person} {cloth})
+
+(new-type-role {based location} {organization} {place})
 
 (new-indv {Shanghai} {city})
 (new-type {park} {place})

@@ -115,6 +115,14 @@
 	:doc "np new individual with adj")
 
 (new-construction 
+	:variables ((?x {organization} :noun :indv) (?y {place} :noun))
+	:pattern (?x ("based" "located") ("in" "at") ?y)
+	:ret-tag :noun
+	:modifier NIL
+	:action (progn (x-is-the-y-of-z ?y {based location} ?x) ?x)
+	:doc "np organization with location")
+
+(new-construction 
 	:variables ((?x {number}) (?y {tangible} :noun :type))
 	:pattern (?x ?y)
 	:ret-tag :noun
@@ -165,7 +173,7 @@
 	:ret-tag :noun
 	:modifier NIL
 	:action (loop for np-ele in *referral*
-				when (simple-is-x-a-y? np-ele ?x)
+				when (handler-case (simple-is-x-a-y? np-ele ?x) (t nil)) 
 				return np-ele)
 	:doc "np referral individual")
 
@@ -212,129 +220,129 @@
 ;;; ------------------------------------------------------------------------
 ;;; VP
 
-(new-construction
-	:variables ((?x {animal} :noun) 
-		(?y {kick} :verb)
-		(?z {physical object} :noun))
-	:pattern (?x ?y ?z)
-	:ret-tag :verb
-	:modifier NIL
-	:action (let ((new-v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-			  	(x-is-the-y-of-z ?z {action object} new-v)
-				new-v)
-	:doc "transitive action kick")
+; (new-construction
+; 	:variables ((?x {animal} :noun) 
+; 		(?y {kick} :verb)
+; 		(?z {physical object} :noun))
+; 	:pattern (?x ?y ?z)
+; 	:ret-tag :verb
+; 	:modifier NIL
+; 	:action (let ((new-v (new-indv NIL ?y)))
+; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
+; 			  	(x-is-the-y-of-z ?z {action object} new-v)
+; 				new-v)
+; 	:doc "transitive action kick")
 
-(new-construction
-	:variables ((?x {animal} :noun) 
-		(?y {hit} :verb)
-		(?z {physical object} :noun))
-	:pattern (?x ?y ?z)
-	:ret-tag :verb
-	:modifier NIL
-	:action (let ((new-v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-			  	(x-is-the-y-of-z ?z {action object} new-v)
-				new-v)
-	:doc "transitive action hit")
+; (new-construction
+; 	:variables ((?x {animal} :noun) 
+; 		(?y {hit} :verb)
+; 		(?z {physical object} :noun))
+; 	:pattern (?x ?y ?z)
+; 	:ret-tag :verb
+; 	:modifier NIL
+; 	:action (let ((new-v (new-indv NIL ?y)))
+; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
+; 			  	(x-is-the-y-of-z ?z {action object} new-v)
+; 				new-v)
+; 	:doc "transitive action hit")
 
-(new-construction
-	:variables ((?x {animal} :noun) 
-		(?y {eat} :verb)
-		(?z {physical object} :noun))
-	:pattern (?x ?y ?z)
-	:ret-tag :verb
-	:modifier NIL
-	:action (let ((new-v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-			  	(x-is-the-y-of-z ?z {action object} new-v)
-				new-v)
-	:doc "transitive action eat")
+; (new-construction
+; 	:variables ((?x {animal} :noun) 
+; 		(?y {eat} :verb)
+; 		(?z {physical object} :noun))
+; 	:pattern (?x ?y ?z)
+; 	:ret-tag :verb
+; 	:modifier NIL
+; 	:action (let ((new-v (new-indv NIL ?y)))
+; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
+; 			  	(x-is-the-y-of-z ?z {action object} new-v)
+; 				new-v)
+; 	:doc "transitive action eat")
 
-(new-construction
-	:variables ((?x {thing} :noun) 
-		(?y {leave} :verb)
-		(?z {place} :noun))
-	:pattern (?x ?y ?z)
-	:ret-tag :verb
-	:modifier NIL
-	:action (let ((new-v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-			  	(x-is-the-y-of-z ?z {action object} new-v)
-				new-v)
-	:doc "transitive action leave")
+; (new-construction
+; 	:variables ((?x {thing} :noun) 
+; 		(?y {leave} :verb)
+; 		(?z {place} :noun))
+; 	:pattern (?x ?y ?z)
+; 	:ret-tag :verb
+; 	:modifier NIL
+; 	:action (let ((new-v (new-indv NIL ?y)))
+; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
+; 			  	(x-is-the-y-of-z ?z {action object} new-v)
+; 				new-v)
+; 	:doc "transitive action leave")
 
-(new-construction
-	:variables ((?x {person} :noun) 
-		(?y {make} :verb)
-		(?z {man-made object} :noun))
-	:pattern (?x ?y ?z)
-	:ret-tag :verb
-	:modifier NIL
-	:action (let ((new-v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-			  	(x-is-the-y-of-z ?z {action object} new-v)
-				new-v)
-	:doc "transitive action person make")
+; (new-construction
+; 	:variables ((?x {person} :noun) 
+; 		(?y {make} :verb)
+; 		(?z {man-made object} :noun))
+; 	:pattern (?x ?y ?z)
+; 	:ret-tag :verb
+; 	:modifier NIL
+; 	:action (let ((new-v (new-indv NIL ?y)))
+; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
+; 			  	(x-is-the-y-of-z ?z {action object} new-v)
+; 				new-v)
+; 	:doc "transitive action person make")
 
-(new-construction
-	:variables ((?x {animal} :noun) 
-		(?y {give} :verb)
-		(?z {animal} :noun)
-		(?w {thing} :noun))
-	:pattern (?x ?y ?z ?w)
-	:ret-tag :verb
-	:modifier NIL
-	:action (let ((new-v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-			  	(x-is-the-y-of-z ?z {action recipient} new-v)
-			  	(x-is-the-y-of-z ?w {action object} new-v)
-				new-v)
-	:doc "transitive action with recipient give")
+; (new-construction
+; 	:variables ((?x {animal} :noun) 
+; 		(?y {give} :verb)
+; 		(?z {animal} :noun)
+; 		(?w {thing} :noun))
+; 	:pattern (?x ?y ?z ?w)
+; 	:ret-tag :verb
+; 	:modifier NIL
+; 	:action (let ((new-v (new-indv NIL ?y)))
+; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
+; 			  	(x-is-the-y-of-z ?z {action recipient} new-v)
+; 			  	(x-is-the-y-of-z ?w {action object} new-v)
+; 				new-v)
+; 	:doc "transitive action with recipient give")
 
-(new-construction
-	:variables ((?x {thing} :noun) 
-		(?y {arrive} :verb))
-	:pattern (?x ?y)
-	:ret-tag :verb
-	:modifier NIL
-	:action (let ((new-v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-				new-v)
-	:doc "intransitive action arrive")
+; (new-construction
+; 	:variables ((?x {thing} :noun) 
+; 		(?y {arrive} :verb))
+; 	:pattern (?x ?y)
+; 	:ret-tag :verb
+; 	:modifier NIL
+; 	:action (let ((new-v (new-indv NIL ?y)))
+; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
+; 				new-v)
+; 	:doc "intransitive action arrive")
 
-(new-construction
-	:variables ((?x {animal} :noun) 
-		(?y {sit} :verb))
-	:pattern (?x ?y)
-	:ret-tag :verb
-	:modifier NIL
-	:action (let ((new-v (new-indv NIL ?y)))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-				new-v)
-	:doc "intransitive action sit")
+; (new-construction
+; 	:variables ((?x {animal} :noun) 
+; 		(?y {sit} :verb))
+; 	:pattern (?x ?y)
+; 	:ret-tag :verb
+; 	:modifier NIL
+; 	:action (let ((new-v (new-indv NIL ?y)))
+; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
+; 				new-v)
+; 	:doc "intransitive action sit")
 
-(new-construction
-	:variables (
-		(?x {animal} :noun) 
-		(?y {hate} :verb) 
-		(?z {thing} :noun))
-	:pattern (?x ?y ?z)
-	:ret-tag :verb
-	:modifier NIL
-	:action (new-statement ?x ?y ?z)
-	:doc "state hate")
+; (new-construction
+; 	:variables (
+; 		(?x {animal} :noun) 
+; 		(?y {hate} :verb) 
+; 		(?z {thing} :noun))
+; 	:pattern (?x ?y ?z)
+; 	:ret-tag :verb
+; 	:modifier NIL
+; 	:action (new-statement ?x ?y ?z)
+; 	:doc "state hate")
 
-(new-construction
-	:variables (
-		(?x {animal} :noun) 
-		(?y {believe} :verb) 
-		(?z {animal} :noun))
-	:pattern (?x ?y ?z)
-	:ret-tag :verb
-	:modifier NIL
-	:action (new-statement ?x ?y ?z)
-	:doc "state believe")
+; (new-construction
+; 	:variables (
+; 		(?x {animal} :noun) 
+; 		(?y {believe} :verb) 
+; 		(?z {animal} :noun))
+; 	:pattern (?x ?y ?z)
+; 	:ret-tag :verb
+; 	:modifier NIL
+; 	:action (new-statement ?x ?y ?z)
+; 	:doc "state believe")
 
 (new-construction 
 	:variables ((?x :noun) (?y :adj))
@@ -477,7 +485,18 @@
 	:doc "create new is not a")
 
 (new-construction
-	:variables ((?x :type) (?y) (?z :noun))
+	:variables ((?x :type-role) (?z :noun))
+	:pattern (("the") ?x ("is" "are") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (let ((parent (context-element ?x)))
+			(loop for np-ele in *referral*
+				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
+				return (x-is-the-y-of-z ?z ?x np-ele)))
+	:doc "create the y of implicit z")
+
+(new-construction
+	:variables ((?x :type-role) (?y) (?z :noun))
 	:pattern (("the") ?x ("of") ?y ("is" "are") ?z)
 	:ret-tag :relation
 	:modifier NIL
@@ -485,7 +504,67 @@
 	:doc "create the y of z")
 
 (new-construction
-	:variables ((?x {person} :list) (?y {teammate of} :relation)) 
+	:variables ((?x :noun) (?y :type-role))
+	:pattern (?x ("is the") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (let ((parent (context-element ?y)))
+			(loop for np-ele in *referral*
+				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
+				return (x-is-the-y-of-z ?x ?y np-ele)))
+	:doc "create the y of implicit z")
+
+(new-construction
+	:variables ((?x :noun) (?y :type-role) (?z))
+	:pattern (?x ("is the") ?y ("of") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (x-is-the-y-of-z ?x ?y ?z)
+	:doc "create the y of z")
+
+(new-construction
+	:variables ((?x :noun) (?y :type-role))
+	:pattern (?x ("is a" "is one of the") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (let ((parent (context-element ?y)))
+			(loop for np-ele in *referral*
+				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
+				return (x-is-a-y-of-z ?x ?y np-ele)))
+	:doc "create a y of implicit z")
+
+(new-construction
+	:variables ((?x :noun) (?y :type-role) (?z))
+	:pattern (?x ("is a" "is one of the") ?y ("of") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (x-is-a-y-of-z ?x ?y ?z)
+	:doc "create a y of z")
+
+(new-construction
+	:variables ((?x :noun :list) (?y :type-role))
+	:pattern (?x ("are the" "are") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (let ((parent (context-element ?y)))
+			(loop for np-ele in *referral*
+				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
+				return (loop for x in ?x 
+							collect (x-is-a-y-of-z x ?y np-ele))))
+	:doc "create several y of z")
+
+(new-construction
+	:variables ((?x :noun :list) (?y :type-role) (?z))
+	:pattern (?x ("are the" "are") ?y ("of") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action (loop for x in ?x 
+				collect (x-is-a-y-of-z x ?y ?z))
+	:doc "create several y of z")
+
+
+(new-construction
+	:variables ((?x {person} :list :noun) (?y {teammate of} :relation)) 
 	:pattern (?x ("are") ?y)
 	:ret-tag :relation
 	:modifier NIL
@@ -498,7 +577,7 @@
 	:doc "state verb relation teammate")
 
 (new-construction
-	:variables ((?x {person} :list) (?y {friend of} :relation)) 
+	:variables ((?x {person} :list :noun) (?y {friend of} :relation)) 
 	:pattern (?x ("are") ?y)
 	:ret-tag :relation
 	:modifier NIL
@@ -509,6 +588,8 @@
 		       append (loop for j from (+ i 1) to (- len 1)
 				    collect (new-statement (nth i ?x) ?y (nth j ?x)))))
 	:doc "state verb relation friend")
+
+
 
 
 
