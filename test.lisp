@@ -4,12 +4,15 @@
 ;;; Author: Yang Yang
 ;;; ***************************************************************************
 
+;; done
 (read-text "Facebook is an American technology company" t)
 (read-text "Facebook is an American technology company based in California" t)
 (read-text "Mark Zuckerberg is the founder of it" t)
 (read-text "Mark Zuckerberg is the founder" t)
 (read-text "Mark Zuckerberg, Eduardo and Andrew are the founders" t)
+(read-text "Mark Zuckerberg and his roommates are the founders" t)
 
+;; to-do
 (read-text "it is founded by Mark Zuckerberg" t)
 (read-text "it was founded by Mark Zuckerberg in 2004" t)
 (read-text "it was founded by Mark Zuckerberg, Eduardo, Andrew, Dustin and Chris" t)

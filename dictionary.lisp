@@ -20,7 +20,7 @@
 (new-type {computer mouse} {man-made object} :english '("mouse" "mice"))
 
 (new-type {technology company} {company})
-(new-type-role {founder} {organization} {person})
+(new-type-role {founder} {organization} {person} :english '("founders"))
 
 (english {mammal} :iname "mammals")
 (english {elephant} :iname "elephants")
@@ -95,13 +95,10 @@
 ;;; Auxiliary verb
 
 (setq auxiliary-verb-dict (list "is" "are"))
-(new-relation {teammate of}
-	      :a-inst-of {person}
-	      :b-inst-of {person}
-	      :symmetric t
-	      :english '("teammate" "teammates"))
 
-(english {friend of} :relation "friend" "friends")
+(new-type-role {teammate} {person} {person} :english '("teammate" "teammates"))
+(new-type-role {roommate} {person} {person} :english '("roommate" "roommates"))
+(new-type-role {friend} {person} {person} :english '("friend" "friends"))
 
 (new-type {basketball player} {person}
 		  :english '("basketball player" "basketball players"))
