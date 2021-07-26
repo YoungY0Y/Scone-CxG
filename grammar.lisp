@@ -210,12 +210,17 @@
 	:doc "adj parallel structure")
 
 (new-construction
-	:variables ((?x :relation) (?y :relation))
-	:pattern (?x ("and") ?y)
-	:ret-tag :relation
+	:variables ((?x :noun :possessive) (?y :type-role))
+	:pattern (?x ?y)
+	:ret-tag :noun
 	:modifier NIL
-	:action (list ?x ?y)
-	:doc "relation parallel structure")
+	:action 
+			(let ((new-node (new-indv NIL (parent-element ?y))))
+				(new-is-a ?x (context-element ?y))
+				(x-is-a-y-of-z new-node ?y ?x)
+				new-node)
+	:doc "possessive type-role")
+
 
 ;;; ------------------------------------------------------------------------
 ;;; VP
@@ -543,7 +548,7 @@
 
 (new-construction
 	:variables ((?x :noun :list) (?y :type-role))
-	:pattern (?x ("are the" "are") ?y)
+	:pattern (?x ("are the") ?y)
 	:ret-tag :relation
 	:modifier NIL
 	:action (let ((parent (context-element ?y)))
@@ -555,16 +560,15 @@
 
 (new-construction
 	:variables ((?x :noun :list) (?y :type-role) (?z))
-	:pattern (?x ("are the" "are") ?y ("of") ?z)
+	:pattern (?x ("are the") ?y ("of") ?z)
 	:ret-tag :relation
 	:modifier NIL
 	:action (loop for x in ?x 
 				collect (x-is-a-y-of-z x ?y ?z))
 	:doc "create several y of z")
 
-
 (new-construction
-	:variables ((?x {person} :list :noun) (?y {teammate of} :relation)) 
+	:variables ((?x {person} :list :noun) (?y {friend} :type-role)) 
 	:pattern (?x ("are") ?y)
 	:ret-tag :relation
 	:modifier NIL
@@ -573,22 +577,17 @@
 					:message "not enough agent to support the relation"))
 				(loop for i from 0 to (- len 2)
 		       append (loop for j from (+ i 1) to (- len 1)
-				    collect (new-statement (nth i ?x) ?y (nth j ?x)))))
+		       		append (list (x-is-a-y-of-z (nth i ?x) ?y (nth j ?x))
+		       					 (x-is-a-y-of-z (nth j ?x) ?y (nth i ?x))))))
 	:doc "state verb relation teammate")
 
 (new-construction
-	:variables ((?x {person} :list :noun) (?y {friend of} :relation)) 
-	:pattern (?x ("are") ?y)
+	:variables ((?x :relation) (?y :relation))
+	:pattern (?x ("and") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (let ((len (length ?x)))
-				(if (< len 2) (error 'grammar-error 
-					:message "not enough agent to support the relation"))
-				(loop for i from 0 to (- len 2)
-		       append (loop for j from (+ i 1) to (- len 1)
-				    collect (new-statement (nth i ?x) ?y (nth j ?x)))))
-	:doc "state verb relation friend")
-
+	:action (list ?x ?y)
+	:doc "relation parallel structure")
 
 
 

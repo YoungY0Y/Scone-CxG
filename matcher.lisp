@@ -36,6 +36,7 @@
 (defun might-be-name (text constraints)
 	"The function takes in a text and the constraints for a variable
 	return if it could be a name."
+	(if (null text) nil
 	(and (not (loop for partial in (cl-ppcre:split "\\s+" text)
 		when (not (upper-case-p (char partial 0)))
 		return T))
@@ -44,7 +45,7 @@
 		(null (find :relation constraints))
 		(null (find :adj constraints))
 		(null (find :type constraints))
-		(null (find :type-role constraints))))
+		(null (find :type-role constraints)))))
 
 (defun meet-constraint (element constraints parents ctx if-new-ctx verbose)
 	"The function takes in an element, the constraints for the variable, 
@@ -124,13 +125,31 @@
 					collect (list ele *context*)))
 		(t NIL))))
 
-(defun variable-match (text constraints verbose)
+(defun process-possessive (text constraints)
+	"The function takes in the text and constraints
+	if the constraints include :possessive, convert
+	text to subjective"
+	(if (null (find :possessive constraints)) text
+		(cond ((equal text "his") "he")
+			  ((equal text "her") "she")
+			  ((equal text "its") "it")
+			  ((equal text "their") "they")
+			  ((and (equal (char (reverse text) 1) #\s) 
+			  		(equal (char (reverse text) 0) #\')) 
+			  			(subseq text 0 (- (length text) 1)))
+			  ((and (equal (char (reverse text) 0) #\s) 
+			  		(equal (char (reverse text) 1) #\'))
+			  			(subseq text 0 (- (length text) 2)))
+			  (t NIL))))
+
+(defun variable-match (pretext constraints verbose)
 	"The function takes in a raw text and a list of constraints
 	for the variable, returns the matched scone elements that
 	satisfies the constraints, the after context
 	and the after referral context."
 	(let ((syntax-tag (get-syntax-tag constraints))
-		  (parents (get-parents constraints)))
+		  (parents (get-parents constraints))
+		  (text (process-possessive pretext constraints)))
 		(let ((result 
 			(append 
 				(loop for element-pair in (lookup-definitions text syntax-tag)
