@@ -215,12 +215,13 @@
 	:ret-tag :noun
 	:modifier NIL
 	:action 
+	;; to-do: check if there exist previously mentioned noun satisfy
+	;; is-a (parent-element ?y) and ?x has this element
 			(let ((new-node (new-indv NIL (parent-element ?y))))
 				(new-is-a ?x (context-element ?y))
 				(x-is-a-y-of-z new-node ?y ?x)
 				new-node)
 	:doc "possessive type-role")
-
 
 ;;; ------------------------------------------------------------------------
 ;;; VP
@@ -580,6 +581,26 @@
 		       		append (list (x-is-a-y-of-z (nth i ?x) ?y (nth j ?x))
 		       					 (x-is-a-y-of-z (nth j ?x) ?y (nth i ?x))))))
 	:doc "state verb relation teammate")
+
+(new-construction
+	:variables ((?x :noun) (?y {number} :noun) (?z :noun :type))
+	:pattern (?x ("has" "have") ?y ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action 
+	;; check if this role type already exist
+	(new-type-role NIL ?x ?z :n ?y :english (list (iname ?z)))
+	:doc "has relation with number")
+
+(new-construction
+	:variables ((?x :noun) (?z :noun :type))
+	:pattern (?x ("has" "have") ("a" "an") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action 
+	;;to-do: check if this role type already exist
+	(new-type-role NIL ?x ?z :n {1} :english (list (iname ?z)))
+	:doc "has relation with number one")
 
 (new-construction
 	:variables ((?x :relation) (?y :relation))

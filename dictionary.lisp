@@ -22,6 +22,12 @@
 (new-type {technology company} {company})
 (new-type-role {founder} {organization} {person} :english '("founders"))
 
+(new-type-role {body part} {animal} {tangible})
+(new-type {leg} {body part} :english '("legs"))
+(new-type {arm} {body part} :english '("arms"))
+(new-type {hand} {body part} :english '("hands"))
+(new-type {feet} {body part} :english '("foot"))
+
 (english {mammal} :iname "mammals")
 (english {elephant} :iname "elephants")
 (english {dog} :iname "dogs")
