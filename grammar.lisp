@@ -209,22 +209,19 @@
 	:action (append (list ?x) ?y)
 	:doc "adj parallel structure")
 
-; (new-construction
-; 	:variables ((?x :noun :possessive) (?y :type-role))
-; 	:pattern (?x ?y)
-; 	:ret-tag :noun
-; 	:modifier NIL
-; 	:action 
-; <<<<<<< HEAD
-; 	;; to-do: check if there exist previously mentioned noun satisfy
-; 	;; is-a (parent-element ?y) and ?x has this element
-; =======
-; >>>>>>> 57d95a9c617d2c2a726d1335089c1eaf10a8c9b0
-; 			(let ((new-node (new-indv NIL (parent-element ?y))))
-; 				(new-is-a ?x (context-element ?y))
-; 				(x-is-a-y-of-z new-node ?y ?x)
-; 				new-node)
-; 	:doc "possessive type-role")
+(new-construction
+	:variables ((?x :noun :possessive) (?y :type-role))
+	:pattern (?x ?y)
+	:ret-tag :noun
+	:modifier NIL
+	:action 
+	;; to-do: check if there exist previously mentioned noun satisfy
+	;; is-a (parent-element ?y) and ?x has this element
+			(let ((new-node (new-indv NIL (parent-element ?y))))
+				(new-is-a ?x (context-element ?y))
+				(x-is-a-y-of-z new-node ?y ?x)
+				new-node)
+	:doc "possessive type-role")
 
 
 ;;; ------------------------------------------------------------------------
@@ -586,40 +583,37 @@
 		       					 (x-is-a-y-of-z (nth j ?x) ?y (nth i ?x))))))
 	:doc "state verb relation teammate")
 
-; (new-construction
-; <<<<<<< HEAD
-; 	:variables ((?x :noun) (?y {number} :noun) (?z :noun :type))
-; 	:pattern (?x ("has" "have") ?y ?z)
-; 	:ret-tag :relation
-; 	:modifier NIL
-; 	:action 
-; 	;; check if this role type already exist
-; 	(new-type-role NIL ?x ?z :n ?y :english (list (iname ?z)))
-; 	:doc "has relation with number")
+(new-construction
+	:variables ((?x :noun) (?y {number} :noun) (?z :noun :type))
+	:pattern (?x ("has" "have") ?y ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action 
+	;; check if this role type already exist
+	(new-type-role NIL ?x ?z :n ?y :english (list (iname ?z)))
+	:doc "has relation with number")
 
-; (new-construction
-; 	:variables ((?x :noun) (?z :noun :type))
-; 	:pattern (?x ("has" "have") ("a" "an") ?z)
-; 	:ret-tag :relation
-; 	:modifier NIL
-; 	:action 
-; 	;;to-do: check if this role type already exist
-; 	(new-type-role NIL ?x ?z :n {1} :english (list (iname ?z)))
-; 	:doc "has relation with number one")
+(new-construction
+	:variables ((?x :noun) (?z :noun :type))
+	:pattern (?x ("has" "have") ("a" "an") ?z)
+	:ret-tag :relation
+	:modifier NIL
+	:action 
+	;;to-do: check if this role type already exist
+	(new-type-role NIL ?x ?z :n {1} :english (list (iname ?z)))
+	:doc "has relation with number one")
 
-; (new-construction
-; 	:variables ((?x :relation) (?y :relation))
-; 	:pattern (?x ("and") ?y)
-; 	:ret-tag :relation
-; 	:modifier NIL
-; =======
-; 	:variables ((?x :relation) (?y :relation))
-; 	:pattern (?x ("and") ?y)
-; 	:ret-tag :relation
-; 	:modifier NIL
-; >>>>>>> 57d95a9c617d2c2a726d1335089c1eaf10a8c9b0
-; 	:action (list ?x ?y)
-; 	:doc "relation parallel structure")
+(new-construction
+	:variables ((?x :relation) (?y :relation))
+	:pattern (?x ("and") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:variables ((?x :relation) (?y :relation))
+	:pattern (?x ("and") ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (list ?x ?y)
+	:doc "relation parallel structure")
 
 
 

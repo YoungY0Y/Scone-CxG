@@ -21,15 +21,13 @@
 
 (new-type {technology company} {company})
 (new-type-role {founder} {organization} {person} :english '("founders"))
-; <<<<<<< HEAD
 
-; (new-type-role {body part} {animal} {tangible})
-; (new-type {leg} {body part} :english '("legs"))
-; (new-type {arm} {body part} :english '("arms"))
-; (new-type {hand} {body part} :english '("hands"))
-; (new-type {feet} {body part} :english '("foot"))
-; =======
-; >>>>>>> 57d95a9c617d2c2a726d1335089c1eaf10a8c9b0
+(new-type-role {body part} {animal} {tangible})
+(new-type {leg} {body part} :english '("legs"))
+(new-type {arm} {body part} :english '("arms"))
+(new-type {hand} {body part} :english '("hands"))
+(new-type {feet} {body part} :english '("foot"))
+
 
 (english {mammal} :iname "mammals")
 (english {elephant} :iname "elephants")
