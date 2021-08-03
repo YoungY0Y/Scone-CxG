@@ -13,8 +13,6 @@
 (read-text "Mark Zuckerberg and his roommates are the founders" t)
 
 ;; to-do
-(read-text "elephants have four legs" t)
-
 (read-text "it is founded by Mark Zuckerberg" t)
 (read-text "it was founded by Mark Zuckerberg in 2004" t)
 (read-text "it was founded by Mark Zuckerberg, Eduardo, Andrew, Dustin and Chris" t)
