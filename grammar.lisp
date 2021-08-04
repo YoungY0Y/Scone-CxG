@@ -174,7 +174,9 @@
 	:modifier NIL
 	:action (loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele ?x) (t nil)) 
-				return np-ele)
+				return (progn 
+					(add-np-to-referral np-ele)
+					np-ele))
 	:doc "np referral individual")
 
 (new-construction
@@ -214,13 +216,23 @@
 	:pattern (?x ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action 
-	;; to-do: check if there exist previously mentioned noun satisfy
-	;; is-a (parent-element ?y) and ?x has this element
-			(let ((new-node (new-indv NIL (parent-element ?y))))
-				(new-is-a ?x (context-element ?y))
-				(x-is-a-y-of-z new-node ?y ?x)
-				new-node)
+	:action (let ((prescan 
+				(loop for np-ele in *referral*
+					when (and (null (typep np-ele 'cons))
+						(simple-is-x-a-y? np-ele (parent-element ?y))
+						(not (null (find np-ele 
+							(list-all-x-of-y ?y ?x) :test #'simple-is-x-eq-y?))))
+					return np-ele)))
+			(if (not (null prescan)) 
+				(progn
+					(new-is-a ?x (context-element ?y))
+					(add-np-to-referral prescan)
+					prescan)
+				(let ((new-node (new-indv NIL (parent-element ?y))))
+					(new-is-a ?x (context-element ?y))
+					(x-is-a-y-of-z new-node ?y ?x)
+					(add-np-to-referral new-node)
+					new-node)))
 	:doc "possessive type-role")
 
 
