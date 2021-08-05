@@ -133,6 +133,18 @@
 				new-node)
 	:doc "np new individual plural")
 
+(new-construction 
+	:variables ((?x {number}) (?z :adj) (?y {tangible} :noun :type))
+	:pattern (?x ?z ?y)
+	:ret-tag :noun
+	:modifier NIL
+	:action (let ((new-node (new-type NIL ?y)))
+			  	(x-is-the-y-of-z ?x {count} new-node)
+			  	(new-is-a new-node ?z)
+			  	(add-np-to-referral new-node)
+				new-node)
+	:doc "np new individual plural with adjective")
+
 (defvar *referral* NIL)
 
 (defun ele-or-list-equal (ele1 ele2)
@@ -537,7 +549,7 @@
 	:variables ((?x :noun) (?y :type-role) (?z))
 	:pattern (?x ("is the") ?y ("of") ?z)
 	:ret-tag :relation
-	:modifier NIL
+	:modifier NILn
 	:action (x-is-the-y-of-z ?x ?y ?z)
 	:doc "create the y of z")
 
@@ -612,7 +624,7 @@
 	:modifier NIL
 	:action 
 	;;to-do: check if this role type already exist
-	(new-type-role NIL ?x ?z :n {1} :english (list (iname ?z)))
+	(new-type-role NIL ?x ?z :n {1} :english (mapcar 'car (get-english-names ?z)))
 	:doc "has relation with number one")
 
 (new-construction
