@@ -10,7 +10,7 @@
 (read-text "they are red, not grey" t)
 (read-text "Wesley and Yang are friends" t)
 (read-text "Wesley is smart and he is a basketball player" t)
-(read-text "he hates elephants" t)
+; (read-text "he hates elephants" t)
 (statement-true? {Wesley} {hate} {Clyde})
 
 ; System reading "elephant is a kind of mammal"

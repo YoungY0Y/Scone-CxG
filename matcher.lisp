@@ -130,7 +130,8 @@
 	if the constraints include :possessive, convert
 	text to subjective"
 	(if (null (find :possessive constraints)) text
-		(cond ((equal text "his") "he")
+		(cond ((< (length text) 2) nil)
+			  ((equal text "his") "he")
 			  ((equal text "her") "she")
 			  ((equal text "its") "it")
 			  ((equal text "their") "they")
@@ -174,7 +175,7 @@
 						(if verbose (commentary "Match ~S with ~S" text element))
 						(if (and (typep element 'cons)
 								(not (loop for ele in element
-										when (null (indv-node? ele))
+										when (null (or (indv-node? ele) (type-node? ele)))
 										return T)))
 							(list element new-ctx (append (list element) 
 													(remove-dup element ref-context)))

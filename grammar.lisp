@@ -184,7 +184,8 @@
 	:pattern (("the") ?x)
 	:ret-tag :noun
 	:modifier NIL
-	:action (loop for np-ele in *referral*
+	:action ;; to-do: add ?y plural case
+			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele ?x) (t nil)) 
 				return (progn 
 					(add-np-to-referral np-ele)
@@ -228,7 +229,8 @@
 	:pattern (?x ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action (let ((prescan 
+	:action ;; to-do: add ?y plural case
+			(let ((prescan 
 				(loop for np-ele in *referral*
 					when (and (null (typep np-ele 'cons))
 						(simple-is-x-a-y? np-ele (parent-element ?y))
@@ -380,7 +382,9 @@
 	:pattern (?x ("is" "are") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (new-is-a ?x ?y)
+	:action (progn
+			(add-np-to-referral ?x)
+			(new-is-a ?x ?y))
 	:doc "state verb adj")
 
 (new-construction 
@@ -388,7 +392,9 @@
 	:pattern (?x ("is not" "are not") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (new-is-not-a ?x ?y)
+	:action (progn
+			(add-np-to-referral ?x)
+			(new-is-not-a ?x ?y))
 	:doc "state verb adj")
 
 (new-construction 
@@ -396,7 +402,9 @@
 	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (list (new-is-a ?x ?y) (new-is-not-a ?x ?z))
+	:action (progn
+			(add-np-to-referral ?x)
+			(list (new-is-a ?x ?y) (new-is-not-a ?x ?z)))
 	:doc "state verb adj")
 
 (new-construction 
@@ -404,10 +412,12 @@
 	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (append
+	:action (progn
+			(add-np-to-referral ?x)
+			(append
 				(loop for adjy in ?y
 					collect (new-is-a ?x adjy))
-				(list (new-is-not-a ?x ?z)))
+				(list (new-is-not-a ?x ?z))))
 	:doc "state verb adj")
 
 (new-construction 
@@ -415,10 +425,12 @@
 	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (append
+	:action (progn
+			(add-np-to-referral ?x)
+			(append
 				(list (new-is-a ?x ?y))
 				(loop for adjz in ?z
-					collect (new-is-not-a ?x adjz)))
+					collect (new-is-not-a ?x adjz))))
 	:doc "state verb adj")
 
 (new-construction 
@@ -426,11 +438,13 @@
 	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (append
+	:action (progn
+			(add-np-to-referral ?x)
+			(append
 				(loop for adjy in ?y
 					collect (new-is-a ?x adjy))
 				(loop for adjz in ?z
-					collect (new-is-not-a ?x adjz)))
+					collect (new-is-not-a ?x adjz))))
 	:doc "state verb adj")
 
 (new-construction 
@@ -438,7 +452,9 @@
 	:pattern (?x ("is" "are") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (new-is-a ?x ?y)
+	:action (progn
+			(add-np-to-referral ?x)
+			(new-is-a ?x ?y))
 	:doc "state verb type")
 
 (new-construction 
@@ -446,7 +462,9 @@
 	:pattern (?x ("is not" "are not") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (new-is-not-a ?x ?y)
+	:action (progn
+			(add-np-to-referral ?x)
+			(new-is-not-a ?x ?y))
 	:doc "state verb type")
 
 (new-construction 
@@ -454,7 +472,9 @@
 	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (list (new-is-a ?x ?y) (new-is-not-a ?x ?z))
+	:action (progn
+			(add-np-to-referral ?x)
+			(list (new-is-a ?x ?y) (new-is-not-a ?x ?z)))
 	:doc "state verb adj")
 
 (new-construction 
@@ -462,10 +482,12 @@
 	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (append
+	:action (progn
+			(add-np-to-referral ?x)
+			(append
 				(loop for ny in ?y
 					collect (new-is-a ?x ny))
-				(list (new-is-not-a ?x ?z)))
+				(list (new-is-not-a ?x ?z))))
 	:doc "state verb adj")
 
 (new-construction 
@@ -473,10 +495,12 @@
 	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (append
+	:action (progn
+			(add-np-to-referral ?x)
+			(append
 				(list (new-is-a ?x ?y))
 				(loop for nz in ?z
-					collect (new-is-not-a ?x nz)))
+					collect (new-is-not-a ?x nz))))
 	:doc "state verb adj")
 
 (new-construction 
@@ -484,11 +508,13 @@
 	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (append
+	:action (progn
+			(add-np-to-referral ?x)
+			(append
 				(loop for ny in ?y
 					collect (new-is-a ?x ny))
 				(loop for nz in ?z
-					collect (new-is-not-a ?x nz)))
+					collect (new-is-not-a ?x nz))))
 	:doc "state verb adj")
 
 (new-construction 
@@ -496,7 +522,10 @@
 	:pattern (?x ("is") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (new-eq ?x ?y)
+	:action (progn
+			(add-np-to-referral ?x)
+			(add-np-to-referral ?y)
+			(new-eq ?x ?y))
 	:doc "state verb indv")
 
 (new-construction 
@@ -504,7 +533,9 @@
 	:pattern (?x ("is a" "is an" "is a kind of") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (new-is-a ?x ?y)
+	:action (progn
+			(add-np-to-referral ?x)
+			(new-is-a ?x ?y))
 	:doc "create new is a")
 
 (new-construction 
@@ -512,7 +543,9 @@
 	:pattern (?x ("is not a" "is not an" "is not a kind of") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (new-is-not-a ?x ?y)
+	:action (progn
+			(add-np-to-referral ?x)
+			(new-is-not-a ?x ?y))
 	:doc "create new is not a")
 
 (new-construction
@@ -521,6 +554,7 @@
 	:ret-tag :relation
 	:modifier NIL
 	:action (let ((parent (context-element ?x)))
+			(add-np-to-referral ?z)
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
 				return (x-is-the-y-of-z ?z ?x np-ele)))
@@ -531,7 +565,9 @@
 	:pattern (("the") ?x ("of") ?y ("is" "are") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (x-is-the-y-of-z ?z ?x ?y)
+	:action (progn
+			(add-np-to-referral ?z)
+			(x-is-the-y-of-z ?z ?x ?y))
 	:doc "create the y of z")
 
 (new-construction
@@ -540,6 +576,7 @@
 	:ret-tag :relation
 	:modifier NIL
 	:action (let ((parent (context-element ?y)))
+			(add-np-to-referral ?x)
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
 				return (x-is-the-y-of-z ?x ?y np-ele)))
@@ -549,8 +586,10 @@
 	:variables ((?x :noun) (?y :type-role) (?z))
 	:pattern (?x ("is the") ?y ("of") ?z)
 	:ret-tag :relation
-	:modifier NILn
-	:action (x-is-the-y-of-z ?x ?y ?z)
+	:modifier NIL
+	:action (progn
+			(add-np-to-referral ?x)
+			(x-is-the-y-of-z ?x ?y ?z))
 	:doc "create the y of z")
 
 (new-construction
@@ -559,6 +598,7 @@
 	:ret-tag :relation
 	:modifier NIL
 	:action (let ((parent (context-element ?y)))
+			(add-np-to-referral ?x)
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
 				return (x-is-a-y-of-z ?x ?y np-ele)))
@@ -569,7 +609,9 @@
 	:pattern (?x ("is a" "is one of the") ?y ("of") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (x-is-a-y-of-z ?x ?y ?z)
+	:action (progn
+			(add-np-to-referral ?x)
+			(x-is-a-y-of-z ?x ?y ?z))
 	:doc "create a y of z")
 
 (new-construction
@@ -614,7 +656,9 @@
 	:modifier NIL
 	:action 
 	;; check if this role type already exist
-	(new-type-role NIL ?x ?z :n ?y :english (list (iname ?z)))
+	(progn
+	(add-np-to-referral ?x)
+	(new-type-role NIL ?x ?z :n ?y :english (list (iname ?z))))
 	:doc "has relation with number")
 
 (new-construction
@@ -624,7 +668,9 @@
 	:modifier NIL
 	:action 
 	;;to-do: check if this role type already exist
-	(new-type-role NIL ?x ?z :n {1} :english (mapcar 'car (get-english-names ?z)))
+	(progn
+	(add-np-to-referral ?x)
+	(new-type-role NIL ?x ?z :n {1} :english (mapcar 'car (get-english-names ?z))))
 	:doc "has relation with number one")
 
 (new-construction
@@ -632,12 +678,10 @@
 	:pattern (?x ("and") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:variables ((?x :relation) (?y :relation))
-	:pattern (?x ("and") ?y)
-	:ret-tag :relation
-	:modifier NIL
 	:action (list ?x ?y)
 	:doc "relation parallel structure")
+
+
 
 
 
