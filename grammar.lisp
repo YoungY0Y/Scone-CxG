@@ -74,7 +74,7 @@
 	(loop for i from 0 to (- (length variables) 1)
 		collect (loop for component in modifier
 					when (equal (car component) (car (nth i variables)))
-					return (cdr component))))
+					return (car (cdr component)))))
 
 (defmacro new-construction (&key variables pattern ret-tag modifier action doc)
 	"The macro takes in the variables, pattern, return-tag, modifier, action 
@@ -673,6 +673,16 @@
 	(new-type-role NIL ?x ?z :n {1} :english (mapcar 'car (get-english-names ?z))))
 	:doc "has relation with number one")
 
+(new-construction 
+	:variables ((?x :relation) (?y {time reference} :noun))
+	:pattern (?x ("in" "at" "on") ?y)
+	:ret-tag :relation
+	:modifier ((?x (new-indv nil {time reference})))
+	:action (progn
+				(new-is-a (context-wire ?x) ?y)
+				?x)
+	:doc "time context")
+
 (new-construction
 	:variables ((?x :relation) (?y :relation))
 	:pattern (?x ("and") ?y)
@@ -680,6 +690,7 @@
 	:modifier NIL
 	:action (list ?x ?y)
 	:doc "relation parallel structure")
+
 
 
 
