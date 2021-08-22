@@ -26,7 +26,7 @@
 		(setf *referral* ref-ctx)
 		(in-context ctx)
 		(let ((result 
-			(let ((construct-result (constructor (car text-list))))
+			(let ((construct-result (constructor (car text-list) nil)))
 				(loop for con in construct-result
 					for next-ctx = (nth 2 con)
 					for next-ref-ctx = (nth 3 con)
@@ -68,7 +68,7 @@
 	and combine the output with previously collected infomation, return current
 	result of the construction engine for all of the input texts."
 	(commentary "System reading ~S" text)
-	(let ((construction-result (constructor text NIL verbose)))
+	(let ((construction-result (constructor text NIL NIL verbose)))
 		(if (not (null construction-result))
 			(progn
 				(setq ele (nth 0 (car construction-result)))

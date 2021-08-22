@@ -205,7 +205,7 @@
 	:pattern (?x (",") ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action (append (list ?x) ?y)
+	:action (if (> (length ?y) 1) (append (list ?x) ?y) nil)
 	:doc "noun parallel structure")
 
 (new-construction
@@ -221,7 +221,7 @@
 	:pattern (?x (",") ?y)
 	:ret-tag :adj
 	:modifier NIL
-	:action (append (list ?x) ?y)
+	:action (if (> (length ?y) 1) (append (list ?x) ?y) nil)
 	:doc "adj parallel structure")
 
 (new-construction
@@ -397,55 +397,19 @@
 			(new-is-not-a ?x ?y))
 	:doc "state verb adj")
 
-(new-construction 
-	:variables ((?x :noun) (?y :adj) (?z :adj))
-	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+(new-construction
+	:variables ((?x {is-a link} :relation :list) (?y :adj :list))
+	:pattern (?x (", not" "not") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(list (new-is-a ?x ?y) (new-is-not-a ?x ?z)))
-	:doc "state verb adj")
+	:action (let ((agent (a-element (car (last ?x))))
+				  (ctx (context-element (car (last ?x)))))
+				(in-context ctx)
+				(append ?x 
+					(loop for adj-ele in ?y
+						  collect (new-is-not-a agent adj-ele))))
+	:doc "state verb adj with not")
 
-(new-construction 
-	:variables ((?x :noun) (?y :adj :list) (?z :adj))
-	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
-	:ret-tag :relation
-	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(append
-				(loop for adjy in ?y
-					collect (new-is-a ?x adjy))
-				(list (new-is-not-a ?x ?z))))
-	:doc "state verb adj")
-
-(new-construction 
-	:variables ((?x :noun) (?y :adj) (?z :adj :list))
-	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
-	:ret-tag :relation
-	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(append
-				(list (new-is-a ?x ?y))
-				(loop for adjz in ?z
-					collect (new-is-not-a ?x adjz))))
-	:doc "state verb adj")
-
-(new-construction 
-	:variables ((?x :noun) (?y :adj :list) (?z :adj :list))
-	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
-	:ret-tag :relation
-	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(append
-				(loop for adjy in ?y
-					collect (new-is-a ?x adjy))
-				(loop for adjz in ?z
-					collect (new-is-not-a ?x adjz))))
-	:doc "state verb adj")
 
 (new-construction 
 	:variables ((?x :noun) (?y :noun :type))
@@ -517,16 +481,16 @@
 					collect (new-is-not-a ?x nz))))
 	:doc "state verb adj")
 
-(new-construction 
-	:variables ((?x :noun) (?y :noun :indv))
-	:pattern (?x ("is") ?y)
-	:ret-tag :relation
-	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(add-np-to-referral ?y)
-			(new-eq ?x ?y))
-	:doc "state verb indv")
+; (new-construction 
+; 	:variables ((?x :noun) (?y :noun :indv))
+; 	:pattern (?x ("is") ?y)
+; 	:ret-tag :relation
+; 	:modifier NIL
+; 	:action (progn
+; 			(add-np-to-referral ?x)
+; 			(add-np-to-referral ?y)
+; 			(new-eq ?x ?y))
+; 	:doc "state verb indv")
 
 (new-construction 
 	:variables ((?x :noun) (?y :noun :type))
@@ -656,9 +620,11 @@
 	:modifier NIL
 	:action 
 	;; check if this role type already exist
-	(progn
-	(add-np-to-referral ?x)
-	(new-type-role NIL ?x ?z :n ?y :english (list (iname ?z))))
+	(let ((new-node 
+			(new-type-role NIL ?x ?z :n ?y :english (list (iname ?z)))))
+		(add-np-to-referral ?x)
+		(add-np-to-referral new-node)
+		new-node)
 	:doc "has relation with number")
 
 (new-construction
@@ -668,9 +634,11 @@
 	:modifier NIL
 	:action 
 	;;to-do: check if this role type already exist
-	(progn
-	(add-np-to-referral ?x)
-	(new-type-role NIL ?x ?z :n {1} :english (mapcar 'car (get-english-names ?z))))
+	(let ((new-node (new-type-role NIL ?x ?z :n {1} 
+					:english (mapcar 'car (get-english-names ?z)))))
+		(add-np-to-referral ?x)
+		(add-np-to-referral new-node)
+		new-node)
 	:doc "has relation with number one")
 
 (new-construction 
@@ -679,7 +647,17 @@
 	:ret-tag :relation
 	:modifier ((?x (new-indv nil {time reference})))
 	:action (progn
-				(new-is-a (context-wire ?x) ?y)
+				(new-is-a (context-element ?x) ?y)
+				?x)
+	:doc "time context")
+
+(new-construction 
+	:variables ((?x :relation) (?y {place} :noun))
+	:pattern (?x ("in" "at" "on") ?y)
+	:ret-tag :relation
+	:modifier ((?x (new-indv nil {place})))
+	:action (progn
+				(new-is-a (context-element ?x) ?y)
 				?x)
 	:doc "time context")
 

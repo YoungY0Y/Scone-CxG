@@ -54,7 +54,7 @@
 	nil if the element does not match the constraints, return the context
 	if the element match."
 	(if (null element) ctx
-	(if (and (find :list constraints) (null (typep element 'cons))) nil 
+	
 		(if (typep element 'cons) 
 			(let ((next-ctx 
 					(meet-constraint (car element) 
@@ -81,7 +81,7 @@
 							do (if verbose (commentary "Assume ~S is a ~S" element parent))
 							do (new-is-a element parent))
 						(in-context before-context)
-						new-ctx) (t nil))))))))
+						new-ctx) (t nil)))))))
 
 (defun pronoun-match (text syntax-tag)
 	"take in a text and return the noun it refers to if it is a pronoun"
@@ -211,7 +211,8 @@
 	variable constraints and check if the textmatch the pattern."
 	(if (typep pattern 'integer) 
 		(variable-match text (nth pattern var-constraint) (nth pattern modifier) verbose)
-		(find text pattern :test #'string-equal)))
+		(find text (mapcar (lambda (x) (join-list-by-space (tokenizer x))) pattern) 
+					:test #'string-equal)))
 
 (defun construction-match-checker (wordlist pattern-list var-constraint modifier)
 	"The function takes in a list of words, a pattern list, 
@@ -340,15 +341,23 @@
 	(if (null variable-value) (list NIL) 
 		(let ((rest-result 
 				(flatten-variable (cdr variable-value) (cdr constraint))))
-			(if (or (find :list (car constraint)) 
-					(null (typep (car variable-value) 'cons)))
-				(mapcar 
-					(lambda (subl) (append (list (car variable-value)) subl)) 
-					rest-result)
-				(loop for val in (car variable-value)
-					append (mapcar 
-							(lambda (subl) (append (list val) subl)) 
-							rest-result))))))
+			(if (find :list (car constraint))
+				(if (null (typep (car variable-value) 'cons))
+					(mapcar 
+						(lambda (subl) 
+							(append (list (list (car variable-value))) subl)) 
+						rest-result)
+					(mapcar 
+						(lambda (subl) (append (list (car variable-value)) subl)) 
+						rest-result))
+				(if (null (typep (car variable-value) 'cons))
+					(mapcar 
+						(lambda (subl) (append (list (car variable-value)) subl)) 
+						rest-result)
+					(loop for val in (car variable-value)
+						append (mapcar 
+								(lambda (subl) (append (list val) subl)) 
+								rest-result)))))))
 
 (defun multiple-apply (action variable-value-list)
 	"The function takes in an action and a list of all possible values
@@ -370,7 +379,8 @@
 (defun pre-selection (text pattern)
 	"the function takes in a d raw text and a pattern list of a construction
 	and returns if the text has the strings in the pattern"
-	(let ((pad-text (concatenate 'string " " text " ")))
+	(let ((pad-text (concatenate 'string " " 
+				(join-list-by-space (tokenizer text)) " ")))
 		(if (null pattern) T
 			(and 
 			(if (typep (car pattern) 'cons) 
@@ -420,10 +430,12 @@
 										cur-ctx (new-context nil cur-ctx))
 					do (in-context (if (null context) ctx context))
 					do (setf *referral* (car (last match-result)))
-					collect (handler-case (list 
-						(multiple-apply (construction-action construction) 
-							(flatten-variable variable-value constraint))   
-						tag ctx (copy-tree *referral*)) (t nil))))))))
+					collect 
+						(let ((res (handler-case 
+							(multiple-apply (construction-action construction) 
+								(flatten-variable variable-value constraint)) (t nil))))
+							(if (not (null res)) 
+								(list res tag ctx (copy-tree *referral*))))))))))
 		(setf *referral* before-ref-context)
 		(in-context before-context)
 		(remove-null result))))

@@ -138,6 +138,7 @@
 	  :english '("United States"
 		     "United States of America"
 		     "USA"
+		     "US"
 		     "America"))
 (new-type {American thing} {thing} :english '(:no-iname :adj "american" "American"))
 (x-is-the-y-of-z {United States} {belonged country} {american thing})
