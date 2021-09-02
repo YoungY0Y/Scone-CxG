@@ -10,6 +10,8 @@
 (read-text "they are red, not grey" t)
 (read-text "Wesley and Yang are friends" t)
 (read-text "Wesley is smart and he is a basketball player" t)
+(read-text "Yang has a mouse" t)
+(read-text "the mouse is a tool" t)
 ; (read-text "he hates elephants" t)
 (statement-true? {Wesley} {hate} {Clyde})
 

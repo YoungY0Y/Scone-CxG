@@ -170,3 +170,12 @@
 
 (setq np-prepositional-phrase
       '(("in" {person outwear})))
+
+;;; ------------------------------------------------------------------------
+;;; past tense time reference
+
+(new-indv {past} {time interval})
+(x-is-the-y-of-z {now} {time interval finish} {past})
+
+
+

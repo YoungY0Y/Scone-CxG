@@ -206,11 +206,30 @@
 											(remove-dup new-node (copy-tree *referral*))))))
 					(t nil)))))))
 
+(defun simple-mophology (text)
+	"a simple mopholorgy function that takes in a text, return
+	the root text and the morphology tags"
+	(cond 
+		((string-equal text "is") (list "is"))
+		((string-equal text "are") (list "is" :plural))
+		((string-equal text "was") (list "is" :past))
+		((string-equal text "were") (list "is" :past :plural))))
+
+(defun mophology-match (text root-list)
+	"the function takes in a text and a list of root phrases, return
+	if the text match the root list"
+	(let ((moph-result (simple-mophology text)))
+		(if (find (car moph-result) root-list :test #'string-equal) 
+			(list (list moph-result *context* (copy-tree *referral*))))))
+
 (defun one-ele-match (text pattern var-constraint modifier verbose)
 	"The function takes in a raw text, a single pattern, a list of 
 	variable constraints and check if the textmatch the pattern."
-	(if (typep pattern 'integer) 
-		(variable-match text (nth pattern var-constraint) (nth pattern modifier) verbose)
+	(if (typep pattern 'integer)
+		(if (typep (car (nth pattern var-constraint)) 'string) 
+			(mophology-match text (nth pattern var-constraint))
+			(variable-match text (nth pattern var-constraint) 
+									(nth pattern modifier) verbose))
 		(find text (mapcar (lambda (x) (join-list-by-space (tokenizer x))) pattern) 
 					:test #'string-equal)))
 
@@ -232,7 +251,8 @@
 				(setf *referral* before-ref-context)
 				(in-context before-context)
 				(one-ele-match text (car pattern-list) var-constraint modifier NIL))
-			when (and 
+			when (progn
+			(and 
 				(not (null first-element-result)) 
 				(if (typep first-element-result 'string) 
 					(construction-match-checker 
@@ -248,7 +268,7 @@
 							(construction-match-checker 
 								(sublst wordlist i (- (length wordlist) i)) 
 											(cdr pattern-list) var-constraint modifier))
-						return T)))
+						return T))))
 			return T)))))
 	(setf *referral* before-ref-context)
 	(in-context before-context)
@@ -292,7 +312,7 @@
 				(setf *referral* before-ref-context)
 				(in-context before-context)
 				(one-ele-match text (car pattern-list) var-constraint modifier verbose))
-			when (not (null first-element-result)) 
+			when (not (null first-element-result))
 			append 
 				(if (typep first-element-result 'string) 
 					(if (construction-match-checker 
@@ -341,7 +361,8 @@
 	(if (null variable-value) (list NIL) 
 		(let ((rest-result 
 				(flatten-variable (cdr variable-value) (cdr constraint))))
-			(if (find :list (car constraint))
+			(if (or (find :list (car constraint))
+				(typep (car (car constraint)) 'string))
 				(if (null (typep (car variable-value) 'cons))
 					(mapcar 
 						(lambda (subl) 

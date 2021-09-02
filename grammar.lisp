@@ -378,21 +378,23 @@
 ; 	:doc "state believe")
 
 (new-construction 
-	:variables ((?x :noun) (?y :adj))
-	:pattern (?x ("is" "are") ?y)
+	:variables ((?x :noun) (?v "is") (?y :adj))
+	:pattern (?x ?v ?y)
 	:ret-tag :relation
 	:modifier NIL
 	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(add-np-to-referral ?x)
 			(new-is-a ?x ?y))
 	:doc "state verb adj")
 
 (new-construction 
-	:variables ((?x :noun) (?y :adj))
-	:pattern (?x ("is not" "are not") ?y)
+	:variables ((?x :noun) (?v "is") (?y :adj))
+	:pattern (?x ?v ("not") ?y)
 	:ret-tag :relation
 	:modifier NIL
 	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(add-np-to-referral ?x)
 			(new-is-not-a ?x ?y))
 	:doc "state verb adj")
@@ -410,114 +412,72 @@
 						  collect (new-is-not-a agent adj-ele))))
 	:doc "state verb adj with not")
 
-
 (new-construction 
-	:variables ((?x :noun) (?y :noun :type))
-	:pattern (?x ("is" "are") ?y)
+	:variables ((?x :noun) (?v "is") (?y :noun :type))
+	:pattern (?x ?v ?y)
 	:ret-tag :relation
 	:modifier NIL
 	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(add-np-to-referral ?x)
 			(new-is-a ?x ?y))
 	:doc "state verb type")
 
 (new-construction 
-	:variables ((?x :noun) (?y :noun :type))
-	:pattern (?x ("is not" "are not") ?y)
+	:variables ((?x :noun) (?v "is") (?y :noun :type))
+	:pattern (?x ?v ("not") ?y)
 	:ret-tag :relation
 	:modifier NIL
 	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(add-np-to-referral ?x)
 			(new-is-not-a ?x ?y))
 	:doc "state verb type")
 
-(new-construction 
-	:variables ((?x :noun) (?y :noun :type) (?z :noun :type))
-	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+(new-construction
+	:variables ((?x {is-a link} :relation :list) (?y :noun :type :list))
+	:pattern (?x (", not" "not") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(list (new-is-a ?x ?y) (new-is-not-a ?x ?z)))
-	:doc "state verb adj")
+	:action (let ((agent (a-element (car (last ?x))))
+				  (ctx (context-element (car (last ?x)))))
+				(in-context ctx)
+				(append ?x 
+					(loop for type-ele in ?y
+						  collect (new-is-not-a agent type-ele))))
+	:doc "state verb type with not")
 
 (new-construction 
-	:variables ((?x :noun) (?y :noun :type :list) (?z :noun :type))
-	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
+	:variables ((?x :noun) (?v "is") (?y :noun :type))
+	:pattern (?x ?v ("a" "an" "a kind of") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(append
-				(loop for ny in ?y
-					collect (new-is-a ?x ny))
-				(list (new-is-not-a ?x ?z))))
-	:doc "state verb adj")
-
-(new-construction 
-	:variables ((?x :noun) (?y :noun :type) (?z :noun :type :list))
-	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
-	:ret-tag :relation
-	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(append
-				(list (new-is-a ?x ?y))
-				(loop for nz in ?z
-					collect (new-is-not-a ?x nz))))
-	:doc "state verb adj")
-
-(new-construction 
-	:variables ((?x :noun) (?y :noun :type :list) (?z :noun :type :list))
-	:pattern (?x ("is" "are") ?y (", not" "not") ?z)
-	:ret-tag :relation
-	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(append
-				(loop for ny in ?y
-					collect (new-is-a ?x ny))
-				(loop for nz in ?z
-					collect (new-is-not-a ?x nz))))
-	:doc "state verb adj")
-
-; (new-construction 
-; 	:variables ((?x :noun) (?y :noun :indv))
-; 	:pattern (?x ("is") ?y)
-; 	:ret-tag :relation
-; 	:modifier NIL
-; 	:action (progn
-; 			(add-np-to-referral ?x)
-; 			(add-np-to-referral ?y)
-; 			(new-eq ?x ?y))
-; 	:doc "state verb indv")
-
-(new-construction 
-	:variables ((?x :noun) (?y :noun :type))
-	:pattern (?x ("is a" "is an" "is a kind of") ?y)
-	:ret-tag :relation
-	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(new-is-a ?x ?y))
+	:action (if (find :plural (cdr ?v)) nil
+			(progn
+				(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+				(add-np-to-referral ?x)
+				(new-is-a ?x ?y)))
 	:doc "create new is a")
 
 (new-construction 
-	:variables ((?x :noun) (?y :noun :type))
-	:pattern (?x ("is not a" "is not an" "is not a kind of") ?y)
+	:variables ((?x :noun) (?v "is") (?y :noun :type))
+	:pattern (?x ?v ("not a" "not an" "not a kind of") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (progn
-			(add-np-to-referral ?x)
-			(new-is-not-a ?x ?y))
+	:action (if (find :plural (cdr ?v)) nil
+			(progn
+				(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+				(add-np-to-referral ?x)
+				(new-is-not-a ?x ?y)))
 	:doc "create new is not a")
 
 (new-construction
-	:variables ((?x :type-role) (?z :noun))
-	:pattern (("the") ?x ("is" "are") ?z)
+	:variables ((?x :type-role) (?v "is") (?z :noun))
+	:pattern (("the") ?x ?v ?z)
 	:ret-tag :relation
 	:modifier NIL
 	:action (let ((parent (context-element ?x)))
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(add-np-to-referral ?z)
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
@@ -525,11 +485,12 @@
 	:doc "create the y of implicit z")
 
 (new-construction
-	:variables ((?x :type-role) (?y) (?z :noun))
-	:pattern (("the") ?x ("of") ?y ("is" "are") ?z)
+	:variables ((?x :type-role) (?y) (?v "is") (?z :noun))
+	:pattern (("the") ?x ("of") ?y ?v ?z)
 	:ret-tag :relation
 	:modifier NIL
 	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(add-np-to-referral ?z)
 			(x-is-the-y-of-z ?z ?x ?y))
 	:doc "create the y of z")
@@ -621,7 +582,7 @@
 	:action 
 	;; check if this role type already exist
 	(let ((new-node 
-			(new-type-role NIL ?x ?z :n ?y :english (list (iname ?z)))))
+			(new-type-role NIL ?x ?z :n ?y)))
 		(add-np-to-referral ?x)
 		(add-np-to-referral new-node)
 		new-node)
@@ -634,8 +595,7 @@
 	:modifier NIL
 	:action 
 	;;to-do: check if this role type already exist
-	(let ((new-node (new-type-role NIL ?x ?z :n {1} 
-					:english (mapcar 'car (get-english-names ?z)))))
+	(let ((new-node (new-type-role NIL ?x ?z :n {1})))
 		(add-np-to-referral ?x)
 		(add-np-to-referral new-node)
 		new-node)
