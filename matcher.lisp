@@ -213,7 +213,8 @@
 		((string-equal text "is") (list "is"))
 		((string-equal text "are") (list "is" :plural))
 		((string-equal text "was") (list "is" :past))
-		((string-equal text "were") (list "is" :past :plural))))
+		((string-equal text "were") (list "is" :past :plural))
+		((string-equal text "will be") (list "is" :future))))
 
 (defun mophology-match (text root-list)
 	"the function takes in a text and a list of root phrases, return

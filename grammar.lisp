@@ -384,6 +384,7 @@
 	:modifier NIL
 	:action (progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?x)
 			(new-is-a ?x ?y))
 	:doc "state verb adj")
@@ -395,6 +396,7 @@
 	:modifier NIL
 	:action (progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?x)
 			(new-is-not-a ?x ?y))
 	:doc "state verb adj")
@@ -419,6 +421,7 @@
 	:modifier NIL
 	:action (progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?x)
 			(new-is-a ?x ?y))
 	:doc "state verb type")
@@ -430,6 +433,7 @@
 	:modifier NIL
 	:action (progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?x)
 			(new-is-not-a ?x ?y))
 	:doc "state verb type")
@@ -455,6 +459,7 @@
 	:action (if (find :plural (cdr ?v)) nil
 			(progn
 				(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+				(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 				(add-np-to-referral ?x)
 				(new-is-a ?x ?y)))
 	:doc "create new is a")
@@ -467,6 +472,7 @@
 	:action (if (find :plural (cdr ?v)) nil
 			(progn
 				(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+				(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 				(add-np-to-referral ?x)
 				(new-is-not-a ?x ?y)))
 	:doc "create new is not a")
@@ -478,6 +484,7 @@
 	:modifier NIL
 	:action (let ((parent (context-element ?x)))
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?z)
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
@@ -491,6 +498,7 @@
 	:modifier NIL
 	:action (progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?z)
 			(x-is-the-y-of-z ?z ?x ?y))
 	:doc "create the y of z")
@@ -609,7 +617,7 @@
 	:action (progn
 				(new-is-a (context-element ?x) ?y)
 				?x)
-	:doc "time context")
+	:doc "time prepositional phrase")
 
 (new-construction 
 	:variables ((?x :relation) (?y {place} :noun))
@@ -619,7 +627,7 @@
 	:action (progn
 				(new-is-a (context-element ?x) ?y)
 				?x)
-	:doc "time context")
+	:doc "location prepositional phrase")
 
 (new-construction
 	:variables ((?x :relation) (?y :relation))

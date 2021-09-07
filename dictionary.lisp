@@ -175,7 +175,9 @@
 ;;; past tense time reference
 
 (new-indv {past} {time interval})
+(new-indv {future} {time interval})
 (x-is-the-y-of-z {now} {time interval finish} {past})
+(x-is-the-y-of-z {now} {time interval start} {future})
 
 
 
