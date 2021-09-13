@@ -40,6 +40,10 @@
 	(and (not (loop for partial in (cl-ppcre:split "\\s+" text)
 		when (not (upper-case-p (char partial 0)))
 		return T))
+		(null (loop for constraint in constraints
+			when (and (or (typep constraint 'element-iname) (typep constraint 'element))
+					(simple-is-x-a-y? constraint {intangible}))
+			return T))
 		(null (find :list constraints))
 		(null (find :verb constraints))
 		(null (find :relation constraints))
@@ -194,7 +198,7 @@
 			(if (not (null result)) result
 				(if (might-be-name text constraints)
 					(handler-case 
-					(let ((new-node (new-indv text {thing}))
+					(let ((new-node (new-indv text {new thing}))
 						  (before-context *context*)
 						  (new-ctx (new-context NIL *context*)))
 						(commentary "Create new name ~S" new-node)
@@ -214,7 +218,15 @@
 		((string-equal text "are") (list "is" :plural))
 		((string-equal text "was") (list "is" :past))
 		((string-equal text "were") (list "is" :past :plural))
-		((string-equal text "will be") (list "is" :future))))
+		((string-equal text "will be") (list "is" :future))
+		((string-equal text "hates") (list "hate"))
+		((string-equal text "hated") (list "hate" :past))
+		((string-equal text "will hate") (list "hate" :future))
+		((string-equal text "believes") (list "believe"))
+		((string-equal text "believed") (list "believe" :past))
+		((string-equal text "will believe") (list "believe" :future))
+		(t (list text))
+		))
 
 (defun mophology-match (text root-list)
 	"the function takes in a text and a list of root phrases, return

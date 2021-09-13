@@ -5,6 +5,8 @@
 ;;; Author: Yang Yang
 ;;; ***************************************************************************
 
+(new-type {new thing} {thing})
+
 (new-type {apple} {natural object} :english '("apples"))
 (new-type {banana} {natural object} :english '("bananas"))
 (new-type {leaf} {natural object} :english '("leaves"))
@@ -118,7 +120,7 @@
 
 ;;; Color
 
-(new-type {color} {tangible})
+(new-type {color} {intangible})
 (new-type {colored thing} {tangible} :english '(:no-iname :adj "colored"))
 (new-type-role {predominant color} {colored thing} {color} :english '("color"))
 

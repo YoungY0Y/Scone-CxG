@@ -5,6 +5,9 @@
 ;;; Author: Yang Yang
 ;;; ***************************************************************************
 
+;;; ------------------------------------------------------------------------
+;;; Define Construction
+
 (defclass construction () (
 	(ret-tag
 		:initarg :ret-tag
@@ -355,27 +358,51 @@
 ; 				new-v)
 ; 	:doc "intransitive action sit")
 
-; (new-construction
-; 	:variables (
-; 		(?x {animal} :noun) 
-; 		(?y {hate} :verb) 
-; 		(?z {thing} :noun))
-; 	:pattern (?x ?y ?z)
-; 	:ret-tag :verb
-; 	:modifier NIL
-; 	:action (new-statement ?x ?y ?z)
-; 	:doc "state hate")
+(new-construction
+	:variables (
+		(?x {animal} :noun) 
+		(?v "hate") 
+		(?z {thing} :noun))
+	:pattern (?x ?v ?z)
+	:ret-tag :verb
+	:modifier NIL
+	:action 
+	(progn
+		(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+		(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+		(new-statement ?x {hate} ?z))
+	:doc "state hate")
 
-; (new-construction
-; 	:variables (
-; 		(?x {animal} :noun) 
-; 		(?y {believe} :verb) 
-; 		(?z {animal} :noun))
-; 	:pattern (?x ?y ?z)
-; 	:ret-tag :verb
-; 	:modifier NIL
-; 	:action (new-statement ?x ?y ?z)
-; 	:doc "state believe")
+(new-construction
+	:variables (
+		(?x {animal} :noun) 
+		(?v "believe") 
+		(?z {thing} :noun))
+	:pattern (?x ?v ?z)
+	:ret-tag :verb
+	:modifier NIL
+	:action 
+	(progn
+		(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+		(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+		(new-statement ?x {believe} ?z))
+	:doc "state believe")
+
+(new-construction 
+	:variables ((?x :noun) (?v "is") (?y :noun :indv))
+	:pattern (?x ?v ?y)
+	:ret-tag :relation
+	:modifier NIL
+	:action (if (or 
+			(and (simple-is-x-a-y ?x {tangible}) (simple-is-x-a-y ?x {intangible}))
+			(and (simple-is-x-a-y ?x {in tangible}) (simple-is-x-a-y ?x {tangible}))) 
+			nil
+			(progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+			(add-np-to-referral ?x)
+			(new-eq ?x ?y)))
+	:doc "state verb indv")
 
 (new-construction 
 	:variables ((?x :noun) (?v "is") (?y :adj))
