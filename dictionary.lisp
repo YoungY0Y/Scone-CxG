@@ -146,7 +146,6 @@
 (x-is-the-y-of-z {United States} {belonged country} {american thing})
 (new-indv {California} {land area})
 (x-is-a-y-of-z {California} {state} {United States})
-
 (new-indv {China} {country with provinces})
 (new-type {Chinese thing} {thing} :english '(:no-iname :adj "chinese" "Chinese"))
 (x-is-the-y-of-z {China} {belonged country} {Chinese thing})

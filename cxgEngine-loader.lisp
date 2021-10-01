@@ -14,5 +14,6 @@
 (load-kb "core")
 (load (concatenate 'string rootpath "Scone-CxG/dictionary"))
 (load (concatenate 'string rootpath "Scone-CxG/grammar"))
+(load (concatenate 'string rootpath "Scone-CxG/morphology"))
 (load (concatenate 'string rootpath "Scone-CxG/matcher"))
 (load (concatenate 'string rootpath "Scone-CxG/engine"))

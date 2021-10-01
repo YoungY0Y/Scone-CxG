@@ -210,23 +210,7 @@
 											(remove-dup new-node (copy-tree *referral*))))))
 					(t nil)))))))
 
-(defun simple-mophology (text)
-	"a simple mopholorgy function that takes in a text, return
-	the root text and the morphology tags"
-	(cond 
-		((string-equal text "is") (list "is"))
-		((string-equal text "are") (list "is" :plural))
-		((string-equal text "was") (list "is" :past))
-		((string-equal text "were") (list "is" :past :plural))
-		((string-equal text "will be") (list "is" :future))
-		((string-equal text "hates") (list "hate"))
-		((string-equal text "hated") (list "hate" :past))
-		((string-equal text "will hate") (list "hate" :future))
-		((string-equal text "believes") (list "believe"))
-		((string-equal text "believed") (list "believe" :past))
-		((string-equal text "will believe") (list "believe" :future))
-		(t (list text))
-		))
+
 
 (defun mophology-match (text root-list)
 	"the function takes in a text and a list of root phrases, return
@@ -410,8 +394,8 @@
 			(+ 1 (context-occurance ctx (cdr match-results)))
 			(context-occurance ctx (cdr match-results)))))
 
-(defun pre-selection (text pattern)
-	"the function takes in a d raw text and a pattern list of a construction
+(defun pre-selection-pattern (text pattern)
+	"the function takes in a raw text and a pattern list of a construction
 	and returns if the text has the strings in the pattern"
 	(let ((pad-text (concatenate 'string " " 
 				(join-list-by-space (tokenizer text)) " ")))
@@ -422,7 +406,21 @@
 					when (not (null (search (concatenate 'string " " phrase " ") pad-text)))
 					return T)
 				T)
-			(pre-selection text (cdr pattern))))))
+			(pre-selection-pattern text (cdr pattern))))))
+
+(defun pre-selection-constraint (text constraint)
+	"the function takes in a d raw text and a constraint list of a construction
+	and returns if the text has the strings in the string constraint"
+	(if (null constraint) T
+		(and 
+		(if (typep (car (car constraint)) 'string) 
+			(loop for root in (car constraint)
+				when (loop for word in (tokenizer text)
+						when (string-equal (car (simple-mophology word)) root)
+						return T)
+				return T)
+			T)
+		(pre-selection-constraint text (cdr constraint)))))
 
 (defun merge-modifier (context modifier len)
 	"the function takes in a context for a construction, the modifier and 
@@ -447,7 +445,8 @@
 		for tag = (construction-tag construction)
 		do (setf *referral* before-ref-context)
 		do (in-context before-context)
-		when (and (pre-selection text pattern)
+		when (and (pre-selection-pattern text pattern)
+			(pre-selection-constraint text constraint)
 			(not (null (construction-match-checker 
 						(tokenizer text) pattern constraint modifier)))
 			(or (null taglist) (find tag taglist)))

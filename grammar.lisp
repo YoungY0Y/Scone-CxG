@@ -256,107 +256,90 @@
 ;;; ------------------------------------------------------------------------
 ;;; VP
 
-; (new-construction
-; 	:variables ((?x {animal} :noun) 
-; 		(?y {kick} :verb)
-; 		(?z {physical object} :noun))
-; 	:pattern (?x ?y ?z)
-; 	:ret-tag :verb
-; 	:modifier NIL
-; 	:action (let ((new-v (new-indv NIL ?y)))
-; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
-; 			  	(x-is-the-y-of-z ?z {action object} new-v)
-; 				new-v)
-; 	:doc "transitive action kick")
+(new-construction
+	:variables ((?x {animal} :noun) 
+		(?v "kick" "hit" "eat")
+		(?z {physical object} :noun))
+	:pattern (?x ?v ?z)
+	:ret-tag :verb
+	:modifier NIL
+	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+			(let ((new-v (new-indv NIL 
+							(car (car (lookup-definitions (car ?v) '(:verb)))))))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z ?z {action object} new-v)
+				new-v))			
+	:doc "transitive action kick, hit, eat")
 
-; (new-construction
-; 	:variables ((?x {animal} :noun) 
-; 		(?y {hit} :verb)
-; 		(?z {physical object} :noun))
-; 	:pattern (?x ?y ?z)
-; 	:ret-tag :verb
-; 	:modifier NIL
-; 	:action (let ((new-v (new-indv NIL ?y)))
-; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
-; 			  	(x-is-the-y-of-z ?z {action object} new-v)
-; 				new-v)
-; 	:doc "transitive action hit")
+(new-construction
+	:variables ((?x {thing} :noun) 
+		(?v "leave")
+		(?z {place} :noun))
+	:pattern (?x ?v ?z)
+	:ret-tag :verb
+	:modifier NIL
+	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+			(let ((new-v (new-indv NIL 
+							(car (car (lookup-definitions (car ?v) '(:verb)))))))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z ?z {action object} new-v)
+				new-v))			
+	:doc "transitive action leave")
 
-; (new-construction
-; 	:variables ((?x {animal} :noun) 
-; 		(?y {eat} :verb)
-; 		(?z {physical object} :noun))
-; 	:pattern (?x ?y ?z)
-; 	:ret-tag :verb
-; 	:modifier NIL
-; 	:action (let ((new-v (new-indv NIL ?y)))
-; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
-; 			  	(x-is-the-y-of-z ?z {action object} new-v)
-; 				new-v)
-; 	:doc "transitive action eat")
+(new-construction
+	:variables ((?x {person} :noun) 
+		(?v "make")
+		(?z {man-made object} :noun))
+	:pattern (?x ?v ?z)
+	:ret-tag :verb
+	:modifier NIL
+	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+			(let ((new-v (new-indv NIL 
+							(car (car (lookup-definitions (car ?v) '(:verb)))))))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z ?z {action object} new-v)
+				new-v))		
+	:doc "transitive action person make")
 
-; (new-construction
-; 	:variables ((?x {thing} :noun) 
-; 		(?y {leave} :verb)
-; 		(?z {place} :noun))
-; 	:pattern (?x ?y ?z)
-; 	:ret-tag :verb
-; 	:modifier NIL
-; 	:action (let ((new-v (new-indv NIL ?y)))
-; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
-; 			  	(x-is-the-y-of-z ?z {action object} new-v)
-; 				new-v)
-; 	:doc "transitive action leave")
+(new-construction
+	:variables ((?x {animal} :noun) 
+		(?v "give")
+		(?z {animal} :noun)
+		(?w {thing} :noun))
+	:pattern (?x ?v ?z ?w)
+	:ret-tag :verb
+	:modifier NIL
+	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+			(let ((new-v (new-indv NIL 
+							(car (car (lookup-definitions (car ?v) '(:verb)))))))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z ?z {action recipient} new-v)
+			  	(x-is-the-y-of-z ?w {action object} new-v)
+				new-v))	
+	:doc "transitive action with recipient give")
 
-; (new-construction
-; 	:variables ((?x {person} :noun) 
-; 		(?y {make} :verb)
-; 		(?z {man-made object} :noun))
-; 	:pattern (?x ?y ?z)
-; 	:ret-tag :verb
-; 	:modifier NIL
-; 	:action (let ((new-v (new-indv NIL ?y)))
-; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
-; 			  	(x-is-the-y-of-z ?z {action object} new-v)
-; 				new-v)
-; 	:doc "transitive action person make")
-
-; (new-construction
-; 	:variables ((?x {animal} :noun) 
-; 		(?y {give} :verb)
-; 		(?z {animal} :noun)
-; 		(?w {thing} :noun))
-; 	:pattern (?x ?y ?z ?w)
-; 	:ret-tag :verb
-; 	:modifier NIL
-; 	:action (let ((new-v (new-indv NIL ?y)))
-; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
-; 			  	(x-is-the-y-of-z ?z {action recipient} new-v)
-; 			  	(x-is-the-y-of-z ?w {action object} new-v)
-; 				new-v)
-; 	:doc "transitive action with recipient give")
-
-; (new-construction
-; 	:variables ((?x {thing} :noun) 
-; 		(?y {arrive} :verb))
-; 	:pattern (?x ?y)
-; 	:ret-tag :verb
-; 	:modifier NIL
-; 	:action (let ((new-v (new-indv NIL ?y)))
-; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
-; 				new-v)
-; 	:doc "intransitive action arrive")
-
-; (new-construction
-; 	:variables ((?x {animal} :noun) 
-; 		(?y {sit} :verb))
-; 	:pattern (?x ?y)
-; 	:ret-tag :verb
-; 	:modifier NIL
-; 	:action (let ((new-v (new-indv NIL ?y)))
-; 			  	(x-is-the-y-of-z ?x {action agent} new-v)
-; 				new-v)
-; 	:doc "intransitive action sit")
+(new-construction
+	:variables ((?x {animal} :noun) 
+		(?v "sit"))
+	:pattern (?x ?v)
+	:ret-tag :verb
+	:modifier NIL
+	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+			(let ((new-v (new-indv NIL 
+							(car (car (lookup-definitions (car ?v) '(:verb)))))))
+			  	(x-is-the-y-of-z ?x {action agent} new-v)
+				new-v))
+	:doc "intransitive action sit")
 
 (new-construction
 	:variables (
@@ -389,13 +372,13 @@
 	:doc "state believe")
 
 (new-construction 
-	:variables ((?x :noun) (?v "is") (?y :noun :indv))
+	:variables ((?x :noun) (?v "are") (?y :noun :indv))
 	:pattern (?x ?v ?y)
 	:ret-tag :relation
 	:modifier NIL
 	:action (if (or 
-			(and (simple-is-x-a-y ?x {tangible}) (simple-is-x-a-y ?x {intangible}))
-			(and (simple-is-x-a-y ?x {in tangible}) (simple-is-x-a-y ?x {tangible}))) 
+			(and (simple-is-x-a-y? ?x {tangible}) (simple-is-x-a-y? ?y {intangible}))
+			(and (simple-is-x-a-y? ?x {intangible}) (simple-is-x-a-y? ?y {tangible}))) 
 			nil
 			(progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
@@ -405,7 +388,7 @@
 	:doc "state verb indv")
 
 (new-construction 
-	:variables ((?x :noun) (?v "is") (?y :adj))
+	:variables ((?x :noun) (?v "are") (?y :adj))
 	:pattern (?x ?v ?y)
 	:ret-tag :relation
 	:modifier NIL
@@ -417,7 +400,7 @@
 	:doc "state verb adj")
 
 (new-construction 
-	:variables ((?x :noun) (?v "is") (?y :adj))
+	:variables ((?x :noun) (?v "are") (?y :adj))
 	:pattern (?x ?v ("not") ?y)
 	:ret-tag :relation
 	:modifier NIL
@@ -442,7 +425,7 @@
 	:doc "state verb adj with not")
 
 (new-construction 
-	:variables ((?x :noun) (?v "is") (?y :noun :type))
+	:variables ((?x :noun) (?v "are") (?y :noun :type))
 	:pattern (?x ?v ?y)
 	:ret-tag :relation
 	:modifier NIL
@@ -454,7 +437,7 @@
 	:doc "state verb type")
 
 (new-construction 
-	:variables ((?x :noun) (?v "is") (?y :noun :type))
+	:variables ((?x :noun) (?v "are") (?y :noun :type))
 	:pattern (?x ?v ("not") ?y)
 	:ret-tag :relation
 	:modifier NIL
@@ -479,11 +462,11 @@
 	:doc "state verb type with not")
 
 (new-construction 
-	:variables ((?x :noun) (?v "is") (?y :noun :type))
+	:variables ((?x :noun) (?v "are") (?y :noun :type))
 	:pattern (?x ?v ("a" "an" "a kind of") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (if (find :plural (cdr ?v)) nil
+	:action (if (not (find :singular (cdr ?v))) nil
 			(progn
 				(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 				(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
@@ -492,11 +475,11 @@
 	:doc "create new is a")
 
 (new-construction 
-	:variables ((?x :noun) (?v "is") (?y :noun :type))
+	:variables ((?x :noun) (?v "are") (?y :noun :type))
 	:pattern (?x ?v ("not a" "not an" "not a kind of") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (if (find :plural (cdr ?v)) nil
+	:action (if (not (find :singular (cdr ?v))) nil
 			(progn
 				(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 				(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
@@ -505,7 +488,7 @@
 	:doc "create new is not a")
 
 (new-construction
-	:variables ((?x :type-role) (?v "is") (?z :noun))
+	:variables ((?x :type-role) (?v "are") (?z :noun))
 	:pattern (("the") ?x ?v ?z)
 	:ret-tag :relation
 	:modifier NIL
@@ -519,7 +502,7 @@
 	:doc "create the y of implicit z")
 
 (new-construction
-	:variables ((?x :type-role) (?y) (?v "is") (?z :noun))
+	:variables ((?x :type-role) (?y) (?v "are") (?z :noun))
 	:pattern (("the") ?x ("of") ?y ?v ?z)
 	:ret-tag :relation
 	:modifier NIL
