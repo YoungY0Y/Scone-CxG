@@ -79,7 +79,25 @@
 					when (equal (car component) (car (nth i variables)))
 					return (car (cdr component)))))
 
-(defmacro new-construction (&key variables pattern ret-tag modifier action doc)
+(defun add-construction (new-cons parent)
+	""
+	(if (null parent) (setf *constructions* (cons (list new-cons) *constructions*))
+		(loop for index from 0 to (- (length *constructions*) 1)
+			do (add-construction-tree (nth index *constructions*) new-cons parent)
+			)
+		)
+	)
+
+(defun add-construction-tree (tree new-cons parent)
+	""
+	(if (equal parent (car tree)) (setf (cdr tree) (cons (list new-cons) (cdr tree)))
+		(loop for index from 1 to (- (length tree) 1)
+			do (add-construction-tree (nth index tree) new-cons parent)
+			)
+		)
+	)
+
+(defmacro new-construction (&key variables pattern ret-tag modifier action parent doc)
 	"The macro takes in the variables, pattern, return-tag, modifier, action 
 	and doc for a construction and add the new construction to the
 	construction list."
@@ -91,7 +109,8 @@
 				#'(lambda ,(mapcar 'car variables) ,action)
 				,doc)))
 
-		(setf *constructions* (cons ,new-rule *constructions*)))))
+		(add-construction ,new-rule ,parent)
+		,new-rule)))
 
 ;;; ------------------------------------------------------------------------
 ;;; NP
@@ -104,6 +123,7 @@
 	:action (let ((new-node (new-indv NIL ?x)))
 			  	(add-np-to-referral new-node)
 				new-node)
+	:parent NIL
 	:doc "np new individual")
 
 (new-construction 
@@ -115,6 +135,7 @@
 			  	(new-is-a new-node ?x)
 			  	(add-np-to-referral new-node)
 				new-node)
+	:parent NIL
 	:doc "np new individual with adj")
 
 (new-construction 
@@ -123,6 +144,7 @@
 	:ret-tag :noun
 	:modifier NIL
 	:action (progn (x-is-the-y-of-z ?y {based location} ?x) ?x)
+	:parent NIL
 	:doc "np organization with location")
 
 (new-construction 
@@ -134,6 +156,7 @@
 			  	(x-is-the-y-of-z ?x {count} ?y)
 			  	(add-np-to-referral new-node)
 				new-node)
+	:parent NIL
 	:doc "np new individual plural")
 
 (new-construction 
@@ -146,6 +169,7 @@
 			  	(new-is-a new-node ?z)
 			  	(add-np-to-referral new-node)
 				new-node)
+	:parent NIL
 	:doc "np new individual plural with adjective")
 
 (defvar *referral* NIL)
@@ -193,6 +217,7 @@
 				return (progn 
 					(add-np-to-referral np-ele)
 					np-ele))
+	:parent NIL
 	:doc "np referral individual")
 
 (new-construction
@@ -201,6 +226,7 @@
 	:ret-tag :noun
 	:modifier NIL
 	:action (list ?x ?y)
+	:parent NIL
 	:doc "noun parallel structure")
 
 (new-construction
@@ -209,6 +235,7 @@
 	:ret-tag :noun
 	:modifier NIL
 	:action (if (> (length ?y) 1) (append (list ?x) ?y) nil)
+	:parent NIL
 	:doc "noun parallel structure")
 
 (new-construction
@@ -217,6 +244,7 @@
 	:ret-tag :adj
 	:modifier NIL
 	:action (list ?x ?y)
+	:parent NIL
 	:doc "adj parallel structure")
 
 (new-construction
@@ -225,6 +253,7 @@
 	:ret-tag :adj
 	:modifier NIL
 	:action (if (> (length ?y) 1) (append (list ?x) ?y) nil)
+	:parent NIL
 	:doc "adj parallel structure")
 
 (new-construction
@@ -250,11 +279,27 @@
 					(x-is-a-y-of-z new-node ?y ?x)
 					(add-np-to-referral new-node)
 					new-node)))
+	:parent NIL
 	:doc "possessive type-role")
 
 
 ;;; ------------------------------------------------------------------------
 ;;; VP
+
+(defvar trans-action-construction
+	(new-construction
+	:variables ((?x {thing} :noun) 
+		(?v "kick" "hit" "eat" "leave" "make")
+		(?z {thing} :noun))
+	:pattern (?x ?v ?z)
+	:ret-tag :verb
+	:modifier NIL
+	:action (progn
+			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+			(car (car (lookup-definitions (car ?v) '(:verb)))))
+	:parent NIL
+	:doc "transitive action general"))
 
 (new-construction
 	:variables ((?x {animal} :noun) 
@@ -264,13 +309,14 @@
 	:ret-tag :verb
 	:modifier NIL
 	:action (progn
-			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
-			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+			; (if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			; (if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(let ((new-v (new-indv NIL 
 							(car (car (lookup-definitions (car ?v) '(:verb)))))))
 			  	(x-is-the-y-of-z ?x {action agent} new-v)
 			  	(x-is-the-y-of-z ?z {action object} new-v)
-				new-v))			
+				new-v))
+	:parent trans-action-construction
 	:doc "transitive action kick, hit, eat")
 
 (new-construction
@@ -281,13 +327,14 @@
 	:ret-tag :verb
 	:modifier NIL
 	:action (progn
-			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
-			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+			; (if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			; (if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(let ((new-v (new-indv NIL 
 							(car (car (lookup-definitions (car ?v) '(:verb)))))))
 			  	(x-is-the-y-of-z ?x {action agent} new-v)
 			  	(x-is-the-y-of-z ?z {action object} new-v)
 				new-v))			
+	:parent trans-action-construction
 	:doc "transitive action leave")
 
 (new-construction
@@ -298,13 +345,14 @@
 	:ret-tag :verb
 	:modifier NIL
 	:action (progn
-			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
-			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
+			; (if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
+			; (if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(let ((new-v (new-indv NIL 
 							(car (car (lookup-definitions (car ?v) '(:verb)))))))
 			  	(x-is-the-y-of-z ?x {action agent} new-v)
 			  	(x-is-the-y-of-z ?z {action object} new-v)
 				new-v))		
+	:parent trans-action-construction
 	:doc "transitive action person make")
 
 (new-construction
@@ -324,6 +372,7 @@
 			  	(x-is-the-y-of-z ?z {action recipient} new-v)
 			  	(x-is-the-y-of-z ?w {action object} new-v)
 				new-v))	
+	:parent NIL
 	:doc "transitive action with recipient give")
 
 (new-construction
@@ -339,6 +388,7 @@
 							(car (car (lookup-definitions (car ?v) '(:verb)))))))
 			  	(x-is-the-y-of-z ?x {action agent} new-v)
 				new-v))
+	:parent NIL
 	:doc "intransitive action sit")
 
 (new-construction
@@ -354,6 +404,7 @@
 		(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 		(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 		(new-statement ?x {hate} ?z))
+	:parent NIL
 	:doc "state hate")
 
 (new-construction
@@ -369,6 +420,7 @@
 		(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 		(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 		(new-statement ?x {believe} ?z))
+	:parent NIL
 	:doc "state believe")
 
 (new-construction 
@@ -385,6 +437,7 @@
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?x)
 			(new-eq ?x ?y)))
+	:parent NIL
 	:doc "state verb indv")
 
 (new-construction 
@@ -397,6 +450,7 @@
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?x)
 			(new-is-a ?x ?y))
+	:parent NIL
 	:doc "state verb adj")
 
 (new-construction 
@@ -409,6 +463,7 @@
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?x)
 			(new-is-not-a ?x ?y))
+	:parent NIL
 	:doc "state verb adj")
 
 (new-construction
@@ -422,6 +477,7 @@
 				(append ?x 
 					(loop for adj-ele in ?y
 						  collect (new-is-not-a agent adj-ele))))
+	:parent NIL
 	:doc "state verb adj with not")
 
 (new-construction 
@@ -434,6 +490,7 @@
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?x)
 			(new-is-a ?x ?y))
+	:parent NIL
 	:doc "state verb type")
 
 (new-construction 
@@ -446,6 +503,7 @@
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?x)
 			(new-is-not-a ?x ?y))
+	:parent NIL
 	:doc "state verb type")
 
 (new-construction
@@ -459,6 +517,7 @@
 				(append ?x 
 					(loop for type-ele in ?y
 						  collect (new-is-not-a agent type-ele))))
+	:parent NIL
 	:doc "state verb type with not")
 
 (new-construction 
@@ -472,6 +531,7 @@
 				(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 				(add-np-to-referral ?x)
 				(new-is-a ?x ?y)))
+	:parent NIL
 	:doc "create new is a")
 
 (new-construction 
@@ -485,6 +545,7 @@
 				(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 				(add-np-to-referral ?x)
 				(new-is-not-a ?x ?y)))
+	:parent NIL
 	:doc "create new is not a")
 
 (new-construction
@@ -499,6 +560,7 @@
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
 				return (x-is-the-y-of-z ?z ?x np-ele)))
+	:parent NIL
 	:doc "create the y of implicit z")
 
 (new-construction
@@ -511,6 +573,7 @@
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(add-np-to-referral ?z)
 			(x-is-the-y-of-z ?z ?x ?y))
+	:parent NIL
 	:doc "create the y of z")
 
 (new-construction
@@ -523,6 +586,7 @@
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
 				return (x-is-the-y-of-z ?x ?y np-ele)))
+	:parent NIL
 	:doc "create the y of implicit z")
 
 (new-construction
@@ -533,6 +597,7 @@
 	:action (progn
 			(add-np-to-referral ?x)
 			(x-is-the-y-of-z ?x ?y ?z))
+	:parent NIL
 	:doc "create the y of z")
 
 (new-construction
@@ -545,6 +610,7 @@
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
 				return (x-is-a-y-of-z ?x ?y np-ele)))
+	:parent NIL
 	:doc "create a y of implicit z")
 
 (new-construction
@@ -555,6 +621,7 @@
 	:action (progn
 			(add-np-to-referral ?x)
 			(x-is-a-y-of-z ?x ?y ?z))
+	:parent NIL
 	:doc "create a y of z")
 
 (new-construction
@@ -567,6 +634,7 @@
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
 				return (loop for x in ?x 
 							collect (x-is-a-y-of-z x ?y np-ele))))
+	:parent NIL
 	:doc "create several y of z")
 
 (new-construction
@@ -576,6 +644,7 @@
 	:modifier NIL
 	:action (loop for x in ?x 
 				collect (x-is-a-y-of-z x ?y ?z))
+	:parent NIL
 	:doc "create several y of z")
 
 (new-construction
@@ -590,6 +659,7 @@
 		       append (loop for j from (+ i 1) to (- len 1)
 		       		append (list (x-is-a-y-of-z (nth i ?x) ?y (nth j ?x))
 		       					 (x-is-a-y-of-z (nth j ?x) ?y (nth i ?x))))))
+	:parent NIL
 	:doc "state verb relation teammate")
 
 (new-construction
@@ -604,6 +674,7 @@
 		(add-np-to-referral ?x)
 		(add-np-to-referral new-node)
 		new-node)
+	:parent NIL
 	:doc "has relation with number")
 
 (new-construction
@@ -617,6 +688,7 @@
 		(add-np-to-referral ?x)
 		(add-np-to-referral new-node)
 		new-node)
+	:parent NIL
 	:doc "has relation with number one")
 
 (new-construction 
@@ -627,6 +699,7 @@
 	:action (progn
 				(new-is-a (context-element ?x) ?y)
 				?x)
+	:parent NIL
 	:doc "time prepositional phrase")
 
 (new-construction 
@@ -637,6 +710,7 @@
 	:action (progn
 				(new-is-a (context-element ?x) ?y)
 				?x)
+	:parent NIL
 	:doc "location prepositional phrase")
 
 (new-construction
@@ -645,6 +719,7 @@
 	:ret-tag :relation
 	:modifier NIL
 	:action (list ?x ?y)
+	:parent NIL
 	:doc "relation parallel structure")
 
 

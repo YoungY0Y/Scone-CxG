@@ -172,8 +172,7 @@
 					for element = (car element-pair)
 					for context = (nth 2 element-pair)
 					for ref-context = (nth 3 element-pair)
-					for new-ctx = 
-						(meet-constraint element constraints parents context t verbose)
+					for new-ctx = (meet-constraint element constraints parents context t verbose)
 					when (not (null new-ctx))
 					collect (progn
 						(if verbose (commentary "Match ~S with ~S" text element))
@@ -430,46 +429,122 @@
 		(loop for ele in exp-modifier
 			collect (if (null ele) context ele))))
 
-(defun constructor (text context &optional taglist verbose)
-	"the function takes in raw text and optional syntax tags 
-	and applies matched constructions actions on it, return the
-	output scone element, syntax tag, the context and the referral 
-	context after the construction."
-	(let ((before-ref-context (copy-tree *referral*))
-		  (before-context *context*))
-	(let ((result (loop for construction in *constructions*
-		for pattern = (construction-pattern construction)
-		for constraint = (construction-var-constraint construction)
-		for modifier = (merge-modifier context (construction-modifier construction)
-						(length (construction-var-constraint construction)))
-		for tag = (construction-tag construction)
-		do (setf *referral* before-ref-context)
-		do (in-context before-context)
-		when (and (pre-selection-pattern text pattern)
-			(pre-selection-constraint text constraint)
-			(not (null (construction-match-checker 
-						(tokenizer text) pattern constraint modifier)))
-			(or (null taglist) (find tag taglist)))
-		append 
+; (defun constructor (text context &optional taglist verbose)
+; 	"the function takes in raw text and optional syntax tags 
+; 	and applies matched constructions actions on it, return the
+; 	output scone element, syntax tag, the context and the referral 
+; 	context after the construction."
+; 	(let ((before-ref-context (copy-tree *referral*))
+; 		  (before-context *context*))
+; 	(let ((result (loop for construction in *constructions*
+; 		for pattern = (construction-pattern construction)
+; 		for constraint = (construction-var-constraint construction)
+; 		for modifier = (merge-modifier context (construction-modifier construction)
+; 						(length (construction-var-constraint construction)))
+; 		for tag = (construction-tag construction)
+; 		do (setf *referral* before-ref-context)
+; 		do (in-context before-context)
+; 		when (and (pre-selection-pattern text pattern)
+; 			(pre-selection-constraint text constraint)
+; 			(not (null (construction-match-checker 
+; 						(tokenizer text) pattern constraint modifier)))
+; 			(or (null taglist) (find tag taglist)))
+; 		append 
+; 			(progn
+; 			(if verbose (commentary "Match ~S with construction ~S pattern ~{~a~^, ~}" 
+; 								text (construction-doc construction) pattern))
+; 			(let ((match-results 
+; 						(construction-matcher (tokenizer text) pattern constraint modifier verbose)))
+; 			(loop for match-result in match-results
+; 					for variable-value = (reverse (cdr (cdr (reverse match-result))))
+; 					for cur-ctx = (car (cdr (reverse match-result)))
+; 					for ctx = (if (= (context-occurance cur-ctx match-results) 1) 
+; 										cur-ctx (new-context nil cur-ctx))
+; 					do (in-context (if (null context) ctx context))
+; 					do (setf *referral* (car (last match-result)))
+; 					collect 
+; 						(let ((res (handler-case 
+; 							(multiple-apply (construction-action construction) 
+; 								(flatten-variable variable-value constraint)) (t nil))))
+; 							(if (not (null res)) 
+; 								(list res tag ctx (copy-tree *referral*))))))))))
+; 		(setf *referral* before-ref-context)
+; 		(in-context before-context)
+; 		(remove-null result))))
+
+(defun tree-constructor (construction-tree text context taglist verbose)
+	"the function takes in a construction tree, raw text, optional 
+	syntax tags and applies matched constructions actions on it, 
+	return the output scone element, syntax tag, the context and the 
+	referral context after the construction."
+	(let ((pattern (construction-pattern (car construction-tree)))
+		  (constraint (construction-var-constraint  (car construction-tree)))
+		  (modifier (merge-modifier context (construction-modifier (car construction-tree))
+						(length (construction-var-constraint (car construction-tree)))))
+		  (tag (construction-tag (car construction-tree))))
+
+		(if (and (pre-selection-pattern text pattern)
+				(pre-selection-constraint text constraint)
+				(not (null (construction-match-checker 
+					(tokenizer text) pattern constraint modifier)))
+				(or (null taglist) (find tag taglist)))
+
 			(progn
-			(if verbose (commentary "Match ~S with construction ~S pattern ~{~a~^, ~}" 
-								text (construction-doc construction) pattern))
-			(let ((match-results 
+				(if verbose (commentary "Match ~S with construction ~S pattern ~{~a~^, ~}" 
+								text (construction-doc (car construction-tree)) pattern))
+				(let ((match-results 
 						(construction-matcher (tokenizer text) pattern constraint modifier verbose)))
-			(loop for match-result in match-results
+				(loop for match-result in match-results
 					for variable-value = (reverse (cdr (cdr (reverse match-result))))
 					for cur-ctx = (car (cdr (reverse match-result)))
 					for ctx = (if (= (context-occurance cur-ctx match-results) 1) 
 										cur-ctx (new-context nil cur-ctx))
 					do (in-context (if (null context) ctx context))
 					do (setf *referral* (car (last match-result)))
-					collect 
+					append 
 						(let ((res (handler-case 
-							(multiple-apply (construction-action construction) 
+							(multiple-apply (construction-action (car construction-tree)) 
 								(flatten-variable variable-value constraint)) (t nil))))
-							(if (not (null res)) 
-								(list res tag ctx (copy-tree *referral*))))))))))
-		(setf *referral* before-ref-context)
-		(in-context before-context)
-		(remove-null result))))
+							(if (not (null res))
+
+								(let ((new-ctx *context*)
+									  (new-ref (copy-tree *referral*)))
+								(let ((new-res
+									(loop for cons-tree in (cdr construction-tree)
+										do (in-context new-ctx)
+										do (setf *referral* new-ref)
+										collect (tree-constructor cons-tree text context taglist verbose))))
+									(if (null new-res) (list (list res tag ctx new-ref)) new-res)))))))))))
+
+
+(defun constructor (text context &optional taglist partial verbose)
+	"the function takes in raw text and optional syntax tags 
+  	and applies matched constructions actions on it, return the
+  	output scone element, syntax tag, the context and the referral 
+  	context after the construction."
+	(let ((before-ref-context (copy-tree *referral*))
+		  (before-context *context*))
+	(let ((result
+		(loop for construction-tree in *constructions*
+			do (in-context before-context)
+			do (setf *referral* before-ref-context)
+			append (tree-constructor construction-tree text context taglist verbose))
+
+		))
+	(setf *referral* before-ref-context)
+ 	(in-context before-context)
+ 	(remove-null result))))
+
+
+
+
+
+
+
+
+
+
+
+
+
 

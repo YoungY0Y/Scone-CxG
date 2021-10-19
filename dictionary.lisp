@@ -175,8 +175,10 @@
 ;;; ------------------------------------------------------------------------
 ;;; past tense time reference
 
-(new-indv {past} {time interval})
-(new-indv {future} {time interval})
+(new-indv {past} {general})
+(new-is-a {past} {time interval})
+(new-indv {future} {general})
+(new-is-a {future} {time interval})
 (x-is-the-y-of-z {now} {time interval finish} {past})
 (x-is-the-y-of-z {now} {time interval start} {future})
 
