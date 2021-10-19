@@ -147,7 +147,7 @@
 			  			(subseq text 0 (- (length text) 2)))
 			  (t NIL))))
 
-(defun variable-match (pretext constraints modifier verbose)
+(defun variable-match (pretext constraints modifier partial verbose)
 	"The function takes in a raw text and a list of constraints
 	for the variable, returns the matched scone elements that
 	satisfies the constraints, the after context
@@ -168,7 +168,7 @@
 							(list element new-ctx (append (list element) 
 											(remove-dup element (copy-tree *referral*))))
 							(list element new-ctx (copy-tree *referral*)))))
-				(loop for element-pair in (constructor text (eval modifier) syntax-tag verbose)
+				(loop for element-pair in (constructor text (eval modifier) syntax-tag partial verbose)
 					for element = (car element-pair)
 					for context = (nth 2 element-pair)
 					for ref-context = (nth 3 element-pair)
@@ -218,18 +218,18 @@
 		(if (find (car moph-result) root-list :test #'string-equal) 
 			(list (list moph-result *context* (copy-tree *referral*))))))
 
-(defun one-ele-match (text pattern var-constraint modifier verbose)
+(defun one-ele-match (text pattern var-constraint modifier partial verbose)
 	"The function takes in a raw text, a single pattern, a list of 
 	variable constraints and check if the textmatch the pattern."
 	(if (typep pattern 'integer)
 		(if (typep (car (nth pattern var-constraint)) 'string) 
 			(mophology-match text (nth pattern var-constraint))
 			(variable-match text (nth pattern var-constraint) 
-									(nth pattern modifier) verbose))
+									(nth pattern modifier) partial verbose))
 		(find text (mapcar (lambda (x) (join-list-by-space (tokenizer x))) pattern) 
 					:test #'string-equal)))
 
-(defun construction-match-checker (wordlist pattern-list var-constraint modifier)
+(defun construction-match-checker (wordlist pattern-list var-constraint modifier partial)
 	"The function takes in a list of words, a pattern list, 
 	a list of variable constraints return if the list of word 
 	could match the pattern."
@@ -246,14 +246,14 @@
 			for first-element-result = (progn 
 				(setf *referral* before-ref-context)
 				(in-context before-context)
-				(one-ele-match text (car pattern-list) var-constraint modifier NIL))
+				(one-ele-match text (car pattern-list) var-constraint modifier partial NIL))
 			when (progn
 			(and 
 				(not (null first-element-result)) 
 				(if (typep first-element-result 'string) 
 					(construction-match-checker 
 						(sublst wordlist i (- (length wordlist) i)) 
-						(cdr pattern-list) var-constraint modifier)
+						(cdr pattern-list) var-constraint modifier partial)
 					(loop for ele-pair in first-element-result
 						for ele = (car ele-pair)
 						for ref-ctx = (nth 2 ele-pair)
@@ -263,7 +263,7 @@
 							(in-context ctx)
 							(construction-match-checker 
 								(sublst wordlist i (- (length wordlist) i)) 
-											(cdr pattern-list) var-constraint modifier))
+											(cdr pattern-list) var-constraint modifier partial))
 						return T))))
 			return T)))))
 	(setf *referral* before-ref-context)
@@ -290,7 +290,7 @@
 		when (not (null ele))
 		collect ele))
 
-(defun construction-matcher (wordlist pattern-list var-constraint modifier verbose)
+(defun construction-matcher (wordlist pattern-list var-constraint modifier partial verbose)
 	"The main matcher function that takes in a wordlist, a pattern list and 
 	a list of variable constraints and returns all possible combination
 	of the elements for the variables, the after context
@@ -307,15 +307,15 @@
 			for first-element-result = (progn
 				(setf *referral* before-ref-context)
 				(in-context before-context)
-				(one-ele-match text (car pattern-list) var-constraint modifier verbose))
+				(one-ele-match text (car pattern-list) var-constraint modifier partial verbose))
 			when (not (null first-element-result))
 			append 
 				(if (typep first-element-result 'string) 
 					(if (construction-match-checker 
 							(sublst wordlist i (- (length wordlist) i)) 
-							(cdr pattern-list) var-constraint modifier)
+							(cdr pattern-list) var-constraint modifier partial)
 					(construction-matcher (sublst wordlist i (- (length wordlist) i)) 
-						(cdr pattern-list) var-constraint modifier verbose))
+						(cdr pattern-list) var-constraint modifier partial verbose))
 		
 					(loop for ele-pair in first-element-result
 						for ele = (car ele-pair)
@@ -326,16 +326,53 @@
 							(in-context ctx)
 							(if (construction-match-checker 
 									(sublst wordlist i (- (length wordlist) i)) 
-									(cdr pattern-list) var-constraint modifier)
+									(cdr pattern-list) var-constraint modifier partial)
 								(loop for rest-ele in 
 									(construction-matcher 
 										(sublst wordlist i (- (length wordlist) i)) 
-										(cdr pattern-list) var-constraint modifier verbose)
+										(cdr pattern-list) var-constraint modifier partial verbose)
 								collect (change-ith-list 
 											rest-ele (car pattern-list) ele))))))))))
 	(setf *referral* before-ref-context)
 	(in-context before-context)
 	(remove-null result))))
+
+;;; -----------------------------------------------------------------------------------
+;;; Partial Match
+
+(defun remove-ith (i l)
+	"The function takes in an index and a list, return a new copy of the list 
+	without the ith element"
+	(copy-tree (append (sublst l 0 i) (sublst l (+ i 1) nil))))
+
+(defun construction-partial-match-checker (wordlist pattern-list var-constraint modifier)
+	"The function that supports partial match and takes in 
+	a list of words, a pattern list, a list of variable constraints 
+	return if the list of word 
+	could match the pattern."
+	(if (construction-match-checker wordlist pattern-list var-constraint modifier t) t
+		(if (< (length pattern-list) 3) nil
+		(loop for i from 0 to (- (length pattern-list) 1)
+			when (and (not (typep (nth i pattern-list) 'integer))
+				(construction-match-checker wordlist (remove-ith i pattern-list)
+					var-constraint modifier t))
+			return t))))
+
+(defun construction-partial-matcher (wordlist pattern-list var-constraint modifier verbose)
+	"The matcher function that supports partial match and 
+	takes in a wordlist, a pattern list and a list of variable constraints 
+	and returns all possible combinationof the elements for the variables,
+	the after context and the after referral context."
+	(if (construction-match-checker wordlist pattern-list var-constraint modifier t) 
+		(construction-matcher wordlist pattern-list var-constraint modifier t verbose)
+		(if (> (length pattern-list) 2)
+		(loop for i from 0 to (- (length pattern-list) 1)
+			when (and (not (typep (nth i pattern-list) 'integer))
+				(construction-match-checker wordlist (remove-ith i pattern-list)
+					var-constraint modifier t))
+			append (construction-matcher wordlist (remove-ith i pattern-list)
+					var-constraint modifier t verbose)))))
+
 
 ;;; -----------------------------------------------------------------------------------
 ;;; Constructor
@@ -472,7 +509,7 @@
 ; 		(in-context before-context)
 ; 		(remove-null result))))
 
-(defun tree-constructor (construction-tree text context taglist verbose)
+(defun tree-constructor (construction-tree text context taglist partial verbose)
 	"the function takes in a construction tree, raw text, optional 
 	syntax tags and applies matched constructions actions on it, 
 	return the output scone element, syntax tag, the context and the 
@@ -483,17 +520,20 @@
 						(length (construction-var-constraint (car construction-tree)))))
 		  (tag (construction-tag (car construction-tree))))
 
-		(if (and (pre-selection-pattern text pattern)
+		(if (and (or (pre-selection-pattern text pattern) partial)
 				(pre-selection-constraint text constraint)
-				(not (null (construction-match-checker 
-					(tokenizer text) pattern constraint modifier)))
+				(if (null partial) (not (null (construction-match-checker 
+					(tokenizer text) pattern constraint modifier nil)))
+					(not (null (construction-partial-match-checker 
+					(tokenizer text) pattern constraint modifier))))
 				(or (null taglist) (find tag taglist)))
 
 			(progn
 				(if verbose (commentary "Match ~S with construction ~S pattern ~{~a~^, ~}" 
 								text (construction-doc (car construction-tree)) pattern))
 				(let ((match-results 
-						(construction-matcher (tokenizer text) pattern constraint modifier verbose)))
+						(if (null partial) (construction-matcher (tokenizer text) pattern constraint modifier nil verbose)
+							(construction-partial-matcher (tokenizer text) pattern constraint modifier verbose))))
 				(loop for match-result in match-results
 					for variable-value = (reverse (cdr (cdr (reverse match-result))))
 					for cur-ctx = (car (cdr (reverse match-result)))
@@ -513,7 +553,7 @@
 									(loop for cons-tree in (cdr construction-tree)
 										do (in-context new-ctx)
 										do (setf *referral* new-ref)
-										collect (tree-constructor cons-tree text context taglist verbose))))
+										collect (tree-constructor cons-tree text context taglist partial verbose))))
 									(if (null new-res) (list (list res tag ctx new-ref)) new-res)))))))))))
 
 
@@ -528,17 +568,12 @@
 		(loop for construction-tree in *constructions*
 			do (in-context before-context)
 			do (setf *referral* before-ref-context)
-			append (tree-constructor construction-tree text context taglist verbose))
+			append (tree-constructor construction-tree text context taglist partial verbose))
 
 		))
 	(setf *referral* before-ref-context)
  	(in-context before-context)
  	(remove-null result))))
-
-
-
-
-
 
 
 
