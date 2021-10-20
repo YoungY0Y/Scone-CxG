@@ -7,7 +7,7 @@
 ;;; ------------------------------------------------------------------------
 ;;; Noun Phrase
 
-(read-text "an elephant" t)
+(read-text "an elephant" nil t)
 ; System reading "an elephant"
 ; Match "an elephant" with construction "np new individual" pattern (a an), 0
 ; Match "elephant" with {elephant}
@@ -15,7 +15,7 @@
 ; (("an elephant" {elephant 0-2702} :NOUN))
 
 (refresh-context)
-(read-text "a smart person" t)
+(read-text "a smart person" nil t)
 ; System reading "a smart person"
 ; Match "a smart person" with construction "np new individual with adj" pattern (a
 ;                                                                                an), 0, 1
@@ -27,8 +27,8 @@
 ; T
 
 (refresh-context)
-(read-text "Clyde is an elephant" t)
-(read-text "the elephant" t)
+(read-text "Clyde is an elephant" nil t)
+(read-text "the elephant" nil t)
 ; System reading "Clyde is an elephant"
 ; Create new name {Clyde}
 ; Match "Clyde is an elephant" with construction "create new is a" pattern 0, 1, (a
@@ -45,7 +45,7 @@
 ;  ("the elephant" {Clyde} :NOUN))
 
 (refresh-context)
-(read-text "Yang's friend" t)
+(read-text "Yang's friend" nil t)
 ; System reading "Yang's friend"
 ; Create new name {Yang}
 ; Match "Yang's friend" with construction "possessive type-role" pattern 0, 1
@@ -56,8 +56,8 @@
 ; (("Yang's friend" {person 0-2722} :NOUN))
 (list-all-x-of-y {friend} {Yang})
 ; ({person 0-2722})
-(read-text "Yang is a friend of Wesley" t)
-(read-text "Wesley's friend" t)
+(read-text "Yang is a friend of Wesley" nil t)
+(read-text "Wesley's friend" nil t)
 ; System reading "Yang is a friend of Wesley"
 ; Create new name {Wesley}
 ; Match "Yang is a friend of Wesley" with construction "create a y of z" pattern 0, (is a
@@ -81,8 +81,8 @@
 ;;; Parallel structure
 
 (refresh-context)
-(read-text "an elephant and a mouse" t)
-(read-text "red and smart" t)
+(read-text "an elephant and a mouse" nil t)
+(read-text "red and smart" nil t)
 ; System reading "an elephant and a mouse"
 ; Match "an elephant and a mouse" with construction "noun parallel structure" pattern 0, (and), 1
 ; Match "an elephant" with construction "np new individual" pattern (a an), 0
@@ -106,7 +106,7 @@
 ;;; State Verb
 
 (refresh-context)
-(read-text "Yang hates elephants" t)
+(read-text "Yang hates elephants" nil t)
 ; System reading "Yang hates elephants"
 ; Match "Yang hates elephants" with construction "state hate" pattern 0, 1, 2
 ; Assume {Yang} is a {animal}
@@ -121,10 +121,10 @@
 ;;; Static Description
 
 (refresh-context)
-(read-text "elephant is a kind of mammal" t)
-(read-text "elephants are grey" t)
-(read-text "Clyde is an elephants" t)
-(read-text "it is red, not grey" t)
+(read-text "elephant is a kind of mammal" nil t)
+(read-text "elephants are grey" nil t)
+(read-text "Clyde is an elephants" nil t)
+(read-text "it is red, not grey" nil t)
 ; System reading "elephant is a kind of mammal"
 ; Match "elephant is a kind of mammal" with construction "create new is a" pattern 0, 1, (a
 ;                                                                                         an
@@ -167,8 +167,8 @@
 ; ({gray})
 
 (refresh-context)
-(read-text "Facebook is an American technology company based in California" t)
-(read-text "Mark Zuckerberg and his roommates are the founders" t)
+(read-text "Facebook is an American technology company based in California" nil t)
+(read-text "Mark Zuckerberg and his roommates are the founders" nil t)
 ; System reading "Facebook is an American technology company based in California"
 ; Match "Facebook is an American technology company based in California" with construction "state verb indv" pattern 0, 1, 2
 ; Match "Facebook" with {Facebook}
@@ -220,7 +220,7 @@
 ; ({person 0-120751})
 
 (refresh-context)
-(read-text "Yang has two dogs" t)
+(read-text "Yang has two dogs" nil t)
 ; System reading "Yang has two dogs"
 ; Create new name {Yang}
 ; Match "Yang has two dogs" with construction "has relation with number" pattern 0, (has
@@ -234,7 +234,7 @@
 ;;; ------------------------------------------------------------------------
 ;;; Tense
 (refresh-context)
-(read-text "dogs were smart" t)
+(read-text "dogs were smart" nil t)
 ; System reading "dogs were smart"
 ; Match "dogs were smart" with construction "state verb adj" pattern 0, 1, 2
 ; Match "dogs" with {dog}
@@ -248,7 +248,7 @@
 ;;; Prepositional Phrase
 
 (refresh-context)
-(read-text "elephants are smart in Africa" t)
+(read-text "elephants are smart in Africa" nil t)
 ; System reading "elephants are smart in Africa"
 ; Match "elephants are smart in Africa" with construction "location prepositional phrase" pattern 0, (in
 ;                                                                                                     at
@@ -266,8 +266,8 @@
 ;;; ------------------------------------------------------------------------
 ;;; Example for Context Back-tracking
 (refresh-context)
-(read-text "Yang has a mouse" t)
-(read-text "the mouse is a tool" t)
+(read-text "Yang has a mouse" nil t)
+(read-text "the mouse is a tool" nil t)
 ; System reading "Yang has a mouse"
 ; Create new name {Yang}
 ; Match "Yang has a mouse" with construction "has relation with number one" pattern 0, (has
