@@ -103,6 +103,8 @@
 ;;; ------------------------------------------------------------------------
 ;;; Auxiliary verb
 
+(new-indv "are" {thing})
+
 (setq auxiliary-verb-dict (list "is" "are"))
 
 (new-type-role {teammate} {person} {person} :english '("teammate" "teammates"))

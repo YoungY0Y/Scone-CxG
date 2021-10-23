@@ -147,11 +147,14 @@
 			  			(subseq text 0 (- (length text) 2)))
 			  (t NIL))))
 
-(defun variable-match (pretext constraints modifier partial verbose)
-	"The function takes in a raw text and a list of constraints
+(defun variable-match (pretext morph-list constraints modifier partial verbose)
+	"The function takes in a root text, morphology info, a list of constraints
 	for the variable, returns the matched scone elements that
 	satisfies the constraints, the after context
 	and the after referral context."
+	(if (loop for con in constraints
+			  when (and (typep con 'string) (null (string-equal pretext con)))
+			  return T) nil 
 	(let ((syntax-tag (get-syntax-tag constraints))
 		  (parents (get-parents constraints))
 		  (text (process-possessive pretext constraints)))
@@ -165,9 +168,9 @@
 					collect (progn
 						(if verbose (commentary "Match ~S with ~S" text element))
 						(if (might-be-name text constraints)
-							(list element new-ctx (append (list element) 
+							(list (cons element morph-list) new-ctx (append (list element) 
 											(remove-dup element (copy-tree *referral*))))
-							(list element new-ctx (copy-tree *referral*)))))
+							(list (cons element morph-list) new-ctx (copy-tree *referral*)))))
 				(loop for element-pair in (constructor text (eval modifier) syntax-tag partial verbose)
 					for element = (car element-pair)
 					for context = (nth 2 element-pair)
@@ -180,9 +183,9 @@
 								(not (loop for ele in element
 										when (null (or (indv-node? ele) (type-node? ele)))
 										return T)))
-							(list element new-ctx (append (list element) 
+							(list (cons element morph-list) new-ctx (append (list element) 
 													(remove-dup element ref-context)))
-							(list element new-ctx ref-context))))
+							(list (cons element morph-list) new-ctx ref-context))))
 
 				(loop for element-pair in (pronoun-match text syntax-tag)
 					for element = (car element-pair)
@@ -192,7 +195,7 @@
 					when (not (null new-ctx))
 					collect (progn
 						(if verbose (commentary "Match ~S with ~S" text element))
-						(list element new-ctx (copy-tree *referral*)))))))
+						(list (cons element morph-list) new-ctx (copy-tree *referral*)))))))
 
 			(if (not (null result)) result
 				(if (might-be-name text constraints)
@@ -205,27 +208,17 @@
 						(loop for parent in parents
 							do (new-is-a new-node parent))
 						(in-context before-context)
-						(list (list new-node new-ctx (append (list new-node) 
+						(list (list (cons new-node morph-list) new-ctx (append (list new-node) 
 											(remove-dup new-node (copy-tree *referral*))))))
-					(t nil)))))))
+					(t nil))))))))
 
-
-
-(defun mophology-match (text root-list)
-	"the function takes in a text and a list of root phrases, return
-	if the text match the root list"
-	(let ((moph-result (simple-mophology text)))
-		(if (find (car moph-result) root-list :test #'string-equal) 
-			(list (list moph-result *context* (copy-tree *referral*))))))
 
 (defun one-ele-match (text pattern var-constraint modifier partial verbose)
 	"The function takes in a raw text, a single pattern, a list of 
 	variable constraints and check if the textmatch the pattern."
 	(if (typep pattern 'integer)
-		(if (typep (car (nth pattern var-constraint)) 'string) 
-			(mophology-match text (nth pattern var-constraint))
-			(variable-match text (nth pattern var-constraint) 
-									(nth pattern modifier) partial verbose))
+		(variable-match (car (simple-morphology text)) (cdr (simple-morphology text)) (nth pattern var-constraint) 
+									(nth pattern modifier) partial verbose)
 		(find text (mapcar (lambda (x) (join-list-by-space (tokenizer x))) pattern) 
 					:test #'string-equal)))
 
@@ -393,22 +386,26 @@
 	for all of the variables."
 	(if (null variable-value) (list NIL) 
 		(let ((rest-result 
-				(flatten-variable (cdr variable-value) (cdr constraint))))
-			(if (or (find :list (car constraint))
-				(typep (car (car constraint)) 'string))
-				(if (null (typep (car variable-value) 'cons))
+				(flatten-variable (cdr variable-value) (cdr constraint)))
+			  (first-ele 
+			  	(if (and (null (find :list (car constraint))) (typep (car (car variable-value)) 'cons))
+			  		(mapcar 
+			  			(lambda (subl) (cons subl (cdr (car variable-value)))) (car (car variable-value)))
+			  		(car variable-value))))
+			(if (find :list (car constraint))
+				(if (null (typep (car first-ele) 'cons))
 					(mapcar 
 						(lambda (subl) 
-							(append (list (list (car variable-value))) subl)) 
+							(append (list (list first-ele)) subl)) 
 						rest-result)
 					(mapcar 
-						(lambda (subl) (append (list (car variable-value)) subl)) 
+						(lambda (subl) (append (list first-ele) subl)) 
 						rest-result))
-				(if (null (typep (car variable-value) 'cons))
+				(if (null (typep (car first-ele) 'cons))
 					(mapcar 
-						(lambda (subl) (append (list (car variable-value)) subl)) 
+						(lambda (subl) (append (list first-ele) subl)) 
 						rest-result)
-					(loop for val in (car variable-value)
+					(loop for val in first-ele
 						append (mapcar 
 								(lambda (subl) (append (list val) subl)) 
 								rest-result)))))))
@@ -452,7 +449,7 @@
 		(if (typep (car (car constraint)) 'string) 
 			(loop for root in (car constraint)
 				when (loop for word in (tokenizer text)
-						when (string-equal (car (simple-mophology word)) root)
+						when (string-equal (car (simple-morphology word)) root)
 						return T)
 				return T)
 			T)

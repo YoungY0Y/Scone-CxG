@@ -44,7 +44,7 @@
 		(not (null (lookup-definitions (subseq text 5) '(:verb)))))
 		(subseq text 5)))
 
-(defun simple-mophology (text)
+(defun simple-morphology (text)
 	"a simple mopholorgy function that takes in a text, return
 	the root text and the morphology tags"
 	(cond 

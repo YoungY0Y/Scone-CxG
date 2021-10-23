@@ -120,7 +120,7 @@
 	:pattern (("a" "an") ?x)
 	:ret-tag :noun
 	:modifier NIL
-	:action (let ((new-node (new-indv NIL ?x)))
+	:action (let ((new-node (new-indv NIL (car ?x))))
 			  	(add-np-to-referral new-node)
 				new-node)
 	:parent NIL
@@ -131,8 +131,8 @@
 	:pattern (("a" "an") ?x ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action (let ((new-node (new-indv NIL ?y)))
-			  	(new-is-a new-node ?x)
+	:action (let ((new-node (new-indv NIL (car ?y))))
+			  	(new-is-a new-node (car ?x))
 			  	(add-np-to-referral new-node)
 				new-node)
 	:parent NIL
@@ -143,7 +143,7 @@
 	:pattern (?x ("based" "located") ("in" "at") ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action (progn (x-is-the-y-of-z ?y {based location} ?x) ?x)
+	:action (progn (x-is-the-y-of-z (car ?y) {based location} (car ?x)) (car ?x))
 	:parent NIL
 	:doc "np organization with location")
 
@@ -152,8 +152,8 @@
 	:pattern (?x ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action (let ((new-node (new-type NIL ?y)))
-			  	(x-is-the-y-of-z ?x {count} ?y)
+	:action (let ((new-node (new-type NIL (car ?y))))
+			  	(x-is-the-y-of-z (car ?x) {count} (car ?y))
 			  	(add-np-to-referral new-node)
 				new-node)
 	:parent NIL
@@ -164,9 +164,9 @@
 	:pattern (?x ?z ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action (let ((new-node (new-type NIL ?y)))
-			  	(x-is-the-y-of-z ?x {count} new-node)
-			  	(new-is-a new-node ?z)
+	:action (let ((new-node (new-type NIL (car ?y))))
+			  	(x-is-the-y-of-z (car ?x) {count} new-node)
+			  	(new-is-a new-node (car ?z))
 			  	(add-np-to-referral new-node)
 				new-node)
 	:parent NIL
@@ -213,7 +213,7 @@
 	:modifier NIL
 	:action ;; to-do: add ?y plural case
 			(loop for np-ele in *referral*
-				when (handler-case (simple-is-x-a-y? np-ele ?x) (t nil)) 
+				when (handler-case (simple-is-x-a-y? np-ele (car ?x)) (t nil)) 
 				return (progn 
 					(add-np-to-referral np-ele)
 					np-ele))
@@ -225,7 +225,7 @@
 	:pattern (?x ("and") ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action (list ?x ?y)
+	:action (list (car ?x) (car ?y))
 	:parent NIL
 	:doc "noun parallel structure")
 
@@ -234,7 +234,7 @@
 	:pattern (?x (",") ?y)
 	:ret-tag :noun
 	:modifier NIL
-	:action (if (> (length ?y) 1) (append (list ?x) ?y) nil)
+	:action (if (> (length (car ?y)) 1) (append (list (car ?x)) (car ?y)) nil)
 	:parent NIL
 	:doc "noun parallel structure")
 
@@ -243,7 +243,7 @@
 	:pattern (?x ("and") ?y)
 	:ret-tag :adj
 	:modifier NIL
-	:action (list ?x ?y)
+	:action (list (car ?x) (car ?y))
 	:parent NIL
 	:doc "adj parallel structure")
 
@@ -252,7 +252,7 @@
 	:pattern (?x (",") ?y)
 	:ret-tag :adj
 	:modifier NIL
-	:action (if (> (length ?y) 1) (append (list ?x) ?y) nil)
+	:action (if (> (length (car ?y)) 1) (append (list (car ?x)) (car ?y)) nil)
 	:parent NIL
 	:doc "adj parallel structure")
 
@@ -265,18 +265,18 @@
 			(let ((prescan 
 				(loop for np-ele in *referral*
 					when (and (null (typep np-ele 'cons))
-						(simple-is-x-a-y? np-ele (parent-element ?y))
+						(simple-is-x-a-y? np-ele (parent-element (car ?y)))
 						(not (null (find np-ele 
-							(list-all-x-of-y ?y ?x) :test #'simple-is-x-eq-y?))))
+							(list-all-x-of-y (car ?y) (car ?x)) :test #'simple-is-x-eq-y?))))
 					return np-ele)))
 			(if (not (null prescan)) 
 				(progn
-					(new-is-a ?x (context-element ?y))
+					(new-is-a (car ?x) (context-element (car ?y)))
 					(add-np-to-referral prescan)
 					prescan)
-				(let ((new-node (new-indv NIL (parent-element ?y))))
-					(new-is-a ?x (context-element ?y))
-					(x-is-a-y-of-z new-node ?y ?x)
+				(let ((new-node (new-indv NIL (parent-element (car ?y)))))
+					(new-is-a (car ?x) (context-element (car ?y)))
+					(x-is-a-y-of-z new-node (car ?y) (car ?x))
 					(add-np-to-referral new-node)
 					new-node)))
 	:parent NIL
@@ -289,7 +289,7 @@
 (defvar trans-action-construction
 	(new-construction
 	:variables ((?x {thing} :noun) 
-		(?v "kick" "hit" "eat" "leave" "make")
+		(?v :verb)
 		(?z {thing} :noun))
 	:pattern (?x ?v ?z)
 	:ret-tag :verb
@@ -313,8 +313,8 @@
 			; (if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(let ((new-v (new-indv NIL 
 							(car (car (lookup-definitions (car ?v) '(:verb)))))))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-			  	(x-is-the-y-of-z ?z {action object} new-v)
+			  	(x-is-the-y-of-z (car ?x) {action agent} new-v)
+			  	(x-is-the-y-of-z (car ?z) {action object} new-v)
 				new-v))
 	:parent trans-action-construction
 	:doc "transitive action kick, hit, eat")
@@ -331,8 +331,8 @@
 			; (if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(let ((new-v (new-indv NIL 
 							(car (car (lookup-definitions (car ?v) '(:verb)))))))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-			  	(x-is-the-y-of-z ?z {action object} new-v)
+			  	(x-is-the-y-of-z (car ?x) {action agent} new-v)
+			  	(x-is-the-y-of-z (car ?z) {action object} new-v)
 				new-v))			
 	:parent trans-action-construction
 	:doc "transitive action leave")
@@ -349,8 +349,8 @@
 			; (if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(let ((new-v (new-indv NIL 
 							(car (car (lookup-definitions (car ?v) '(:verb)))))))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-			  	(x-is-the-y-of-z ?z {action object} new-v)
+			  	(x-is-the-y-of-z (car ?x) {action agent} new-v)
+			  	(x-is-the-y-of-z (car ?z) {action object} new-v)
 				new-v))		
 	:parent trans-action-construction
 	:doc "transitive action person make")
@@ -368,9 +368,9 @@
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(let ((new-v (new-indv NIL 
 							(car (car (lookup-definitions (car ?v) '(:verb)))))))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
-			  	(x-is-the-y-of-z ?z {action recipient} new-v)
-			  	(x-is-the-y-of-z ?w {action object} new-v)
+			  	(x-is-the-y-of-z (car ?x) {action agent} new-v)
+			  	(x-is-the-y-of-z (car ?z) {action recipient} new-v)
+			  	(x-is-the-y-of-z (car ?w) {action object} new-v)
 				new-v))	
 	:parent NIL
 	:doc "transitive action with recipient give")
@@ -386,7 +386,7 @@
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
 			(let ((new-v (new-indv NIL 
 							(car (car (lookup-definitions (car ?v) '(:verb)))))))
-			  	(x-is-the-y-of-z ?x {action agent} new-v)
+			  	(x-is-the-y-of-z (car ?x) {action agent} new-v)
 				new-v))
 	:parent NIL
 	:doc "intransitive action sit")
@@ -403,7 +403,7 @@
 	(progn
 		(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 		(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-		(new-statement ?x {hate} ?z))
+		(new-statement (car ?x) (car ?v) (car ?z)))
 	:parent NIL
 	:doc "state hate")
 
@@ -419,7 +419,7 @@
 	(progn
 		(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 		(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-		(new-statement ?x {believe} ?z))
+		(new-statement (car ?x) (car ?v) (car ?z)))
 	:parent NIL
 	:doc "state believe")
 
@@ -429,14 +429,14 @@
 	:ret-tag :relation
 	:modifier NIL
 	:action (if (or 
-			(and (simple-is-x-a-y? ?x {tangible}) (simple-is-x-a-y? ?y {intangible}))
-			(and (simple-is-x-a-y? ?x {intangible}) (simple-is-x-a-y? ?y {tangible}))) 
+			(and (simple-is-x-a-y? (car ?x) {tangible}) (simple-is-x-a-y? (car ?y) {intangible}))
+			(and (simple-is-x-a-y? (car ?x) {intangible}) (simple-is-x-a-y? (car ?y) {tangible}))) 
 			nil
 			(progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-			(add-np-to-referral ?x)
-			(new-eq ?x ?y)))
+			(add-np-to-referral (car ?x))
+			(new-eq (car ?x) (car ?y))))
 	:parent NIL
 	:doc "state verb indv")
 
@@ -448,8 +448,8 @@
 	:action (progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-			(add-np-to-referral ?x)
-			(new-is-a ?x ?y))
+			(add-np-to-referral (car ?x))
+			(new-is-a (car ?x) (car ?y)))
 	:parent NIL
 	:doc "state verb adj")
 
@@ -461,8 +461,8 @@
 	:action (progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-			(add-np-to-referral ?x)
-			(new-is-not-a ?x ?y))
+			(add-np-to-referral (car ?x))
+			(new-is-not-a (car ?x) (car ?y)))
 	:parent NIL
 	:doc "state verb adj")
 
@@ -471,11 +471,11 @@
 	:pattern (?x (", not" "not") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (let ((agent (a-element (car (last ?x))))
-				  (ctx (context-element (car (last ?x)))))
+	:action (let ((agent (a-element (car (last (car ?x)))))
+				  (ctx (context-element (car (last (car ?x))))))
 				(in-context ctx)
-				(append ?x 
-					(loop for adj-ele in ?y
+				(append (car ?x)
+					(loop for adj-ele in (car ?y)
 						  collect (new-is-not-a agent adj-ele))))
 	:parent NIL
 	:doc "state verb adj with not")
@@ -488,8 +488,8 @@
 	:action (progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-			(add-np-to-referral ?x)
-			(new-is-a ?x ?y))
+			(add-np-to-referral (car ?x))
+			(new-is-a (car ?x) (car ?y)))
 	:parent NIL
 	:doc "state verb type")
 
@@ -501,8 +501,8 @@
 	:action (progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-			(add-np-to-referral ?x)
-			(new-is-not-a ?x ?y))
+			(add-np-to-referral (car ?x))
+			(new-is-not-a (car ?x) (car ?y)))
 	:parent NIL
 	:doc "state verb type")
 
@@ -511,17 +511,17 @@
 	:pattern (?x (", not" "not") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (let ((agent (a-element (car (last ?x))))
-				  (ctx (context-element (car (last ?x)))))
+	:action (let ((agent (a-element (car (last (car ?x)))))
+				  (ctx (context-element (car (last (car ?x))))))
 				(in-context ctx)
-				(append ?x 
-					(loop for type-ele in ?y
+				(append (car ?x)
+					(loop for type-ele in (car ?y)
 						  collect (new-is-not-a agent type-ele))))
 	:parent NIL
 	:doc "state verb type with not")
 
 (new-construction 
-	:variables ((?x :noun) (?v "are") (?y :noun :type))
+	:variables ((?x :noun) (?v {are}) (?y :noun :type))
 	:pattern (?x ?v ("a" "an" "a kind of") ?y)
 	:ret-tag :relation
 	:modifier NIL
@@ -529,8 +529,8 @@
 			(progn
 				(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 				(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-				(add-np-to-referral ?x)
-				(new-is-a ?x ?y)))
+				(add-np-to-referral (car ?x))
+				(new-is-a (car ?x) (car ?y))))
 	:parent NIL
 	:doc "create new is a")
 
@@ -543,8 +543,8 @@
 			(progn
 				(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 				(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-				(add-np-to-referral ?x)
-				(new-is-not-a ?x ?y)))
+				(add-np-to-referral (car ?x))
+				(new-is-not-a (car ?x) (car ?y))))
 	:parent NIL
 	:doc "create new is not a")
 
@@ -553,13 +553,13 @@
 	:pattern (("the") ?x ?v ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (let ((parent (context-element ?x)))
+	:action (let ((parent (context-element (car ?x))))
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-			(add-np-to-referral ?z)
+			(add-np-to-referral (car ?z))
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
-				return (x-is-the-y-of-z ?z ?x np-ele)))
+				return (x-is-the-y-of-z (car ?z) (car ?x) np-ele)))
 	:parent NIL
 	:doc "create the y of implicit z")
 
@@ -571,8 +571,8 @@
 	:action (progn
 			(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 			(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-			(add-np-to-referral ?z)
-			(x-is-the-y-of-z ?z ?x ?y))
+			(add-np-to-referral (car ?z))
+			(x-is-the-y-of-z (car ?z) (car ?x) (car ?y)))
 	:parent NIL
 	:doc "create the y of z")
 
@@ -581,11 +581,11 @@
 	:pattern (?x ("is the") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (let ((parent (context-element ?y)))
-			(add-np-to-referral ?x)
+	:action (let ((parent (context-element (car ?y))))
+			(add-np-to-referral (car ?x))
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
-				return (x-is-the-y-of-z ?x ?y np-ele)))
+				return (x-is-the-y-of-z (car ?x) (car ?y) np-ele)))
 	:parent NIL
 	:doc "create the y of implicit z")
 
@@ -595,8 +595,8 @@
 	:ret-tag :relation
 	:modifier NIL
 	:action (progn
-			(add-np-to-referral ?x)
-			(x-is-the-y-of-z ?x ?y ?z))
+			(add-np-to-referral (car ?x))
+			(x-is-the-y-of-z (car ?x) (car ?y) (car ?z)))
 	:parent NIL
 	:doc "create the y of z")
 
@@ -605,11 +605,11 @@
 	:pattern (?x ("is a" "is one of the") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (let ((parent (context-element ?y)))
-			(add-np-to-referral ?x)
+	:action (let ((parent (context-element (car ?y))))
+			(add-np-to-referral (car ?x))
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
-				return (x-is-a-y-of-z ?x ?y np-ele)))
+				return (x-is-a-y-of-z (car ?x) (car ?y) np-ele)))
 	:parent NIL
 	:doc "create a y of implicit z")
 
@@ -619,8 +619,8 @@
 	:ret-tag :relation
 	:modifier NIL
 	:action (progn
-			(add-np-to-referral ?x)
-			(x-is-a-y-of-z ?x ?y ?z))
+			(add-np-to-referral (car ?x))
+			(x-is-a-y-of-z (car ?x) (car ?y) (car ?z)))
 	:parent NIL
 	:doc "create a y of z")
 
@@ -629,11 +629,11 @@
 	:pattern (?x ("are the") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (let ((parent (context-element ?y)))
+	:action (let ((parent (context-element (car ?y))))
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
-				return (loop for x in ?x 
-							collect (x-is-a-y-of-z x ?y np-ele))))
+				return (loop for x in (car ?x) 
+							collect (x-is-a-y-of-z x (car ?y) np-ele))))
 	:parent NIL
 	:doc "create several y of z")
 
@@ -642,8 +642,8 @@
 	:pattern (?x ("are the") ?y ("of") ?z)
 	:ret-tag :relation
 	:modifier NIL
-	:action (loop for x in ?x 
-				collect (x-is-a-y-of-z x ?y ?z))
+	:action (loop for x in (car ?x) 
+				collect (x-is-a-y-of-z x (car ?y) (car ?z)))
 	:parent NIL
 	:doc "create several y of z")
 
@@ -652,13 +652,13 @@
 	:pattern (?x ("are") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (let ((len (length ?x)))
+	:action (let ((len (length (car ?x))))
 				(if (< len 2) (error 'grammar-error 
 					:message "not enough agent to support the relation"))
 				(loop for i from 0 to (- len 2)
 		       append (loop for j from (+ i 1) to (- len 1)
-		       		append (list (x-is-a-y-of-z (nth i ?x) ?y (nth j ?x))
-		       					 (x-is-a-y-of-z (nth j ?x) ?y (nth i ?x))))))
+		       		append (list (x-is-a-y-of-z (nth i (car ?x)) (car ?y) (nth j (car ?x)))
+		       					 (x-is-a-y-of-z (nth j (car ?x)) (car ?y) (nth i (car ?x)))))))
 	:parent NIL
 	:doc "state verb relation teammate")
 
@@ -670,8 +670,8 @@
 	:action 
 	;; check if this role type already exist
 	(let ((new-node 
-			(new-type-role NIL ?x ?z :n ?y)))
-		(add-np-to-referral ?x)
+			(new-type-role NIL (car ?x) (car ?z) :n (car ?y))))
+		(add-np-to-referral (car ?x))
 		(add-np-to-referral new-node)
 		new-node)
 	:parent NIL
@@ -684,8 +684,8 @@
 	:modifier NIL
 	:action 
 	;;to-do: check if this role type already exist
-	(let ((new-node (new-type-role NIL ?x ?z :n {1})))
-		(add-np-to-referral ?x)
+	(let ((new-node (new-type-role NIL (car ?x) (car ?z) :n {1})))
+		(add-np-to-referral (car ?x))
 		(add-np-to-referral new-node)
 		new-node)
 	:parent NIL
@@ -697,8 +697,8 @@
 	:ret-tag :relation
 	:modifier ((?x (new-indv nil {time reference})))
 	:action (progn
-				(new-is-a (context-element ?x) ?y)
-				?x)
+				(new-is-a (context-element (car ?x)) (car ?y))
+				(car ?x))
 	:parent NIL
 	:doc "time prepositional phrase")
 
@@ -708,8 +708,8 @@
 	:ret-tag :relation
 	:modifier ((?x (new-indv nil {place})))
 	:action (progn
-				(new-is-a (context-element ?x) ?y)
-				?x)
+				(new-is-a (context-element (car ?x)) (car ?y))
+				(car ?x))
 	:parent NIL
 	:doc "location prepositional phrase")
 
@@ -718,7 +718,8 @@
 	:pattern (?x ("and") ?y)
 	:ret-tag :relation
 	:modifier NIL
-	:action (list ?x ?y)
+	:action 
+	(list (car ?x) (car ?y))
 	:parent NIL
 	:doc "relation parallel structure")
 
