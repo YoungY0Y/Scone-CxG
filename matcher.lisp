@@ -44,7 +44,6 @@
 			when (and (or (typep constraint 'element-iname) (typep constraint 'element))
 					(simple-is-x-a-y? constraint {intangible}))
 			return T))
-		(null (find :list constraints))
 		(null (find :verb constraints))
 		(null (find :relation constraints))
 		(null (find :adj constraints))
@@ -95,6 +94,7 @@
 	(cond ((or (equal text "he") (equal text "him"))
 				(loop for ele in *referral*
 					when (and (or (typep ele 'element) (typep ele 'element-iname))
+							(indv-node? ele)
 							(not (equal (is-x-a-y? ele {male person}) :NO)))
 					collect (let ((before-context *context*)
 								  (new-ctx (new-context NIL *context*)))
@@ -105,6 +105,7 @@
 		((or (equal text "she") (equal text "her"))
 				(loop for ele in *referral*
 					when (and (or (typep ele 'element) (typep ele 'element-iname))
+							(indv-node? ele)
 							(not (equal (is-x-a-y? ele {female person}) :NO)))
 					collect (let ((before-context *context*)
 								  (new-ctx (new-context NIL *context*)))
@@ -115,6 +116,7 @@
 		((equal text "it") 
 				(loop for ele in *referral*
 					when (and (or (typep ele 'element) (typep ele 'element-iname))
+							(indv-node? ele)
 							(not (equal (is-x-a-y? ele {person}) :YES)))
 					collect (let ((before-context *context*)
 								  (new-ctx (new-context NIL *context*)))
@@ -129,35 +131,21 @@
 					collect (list ele *context*)))
 		(t NIL))))
 
-(defun process-possessive (text constraints)
-	"The function takes in the text and constraints
-	if the constraints include :possessive, convert
-	text to subjective"
-	(if (null (find :possessive constraints)) text
-		(cond ((< (length text) 2) nil)
-			  ((equal text "his") "he")
-			  ((equal text "her") "she")
-			  ((equal text "its") "it")
-			  ((equal text "their") "they")
-			  ((and (equal (char (reverse text) 1) #\s) 
-			  		(equal (char (reverse text) 0) #\')) 
-			  			(subseq text 0 (- (length text) 1)))
-			  ((and (equal (char (reverse text) 0) #\s) 
-			  		(equal (char (reverse text) 1) #\'))
-			  			(subseq text 0 (- (length text) 2)))
-			  (t NIL))))
-
-(defun variable-match (pretext morph-list constraints modifier partial verbose)
+(defun variable-match (text morph-list constraints modifier partial verbose)
 	"The function takes in a root text, morphology info, a list of constraints
 	for the variable, returns the matched scone elements that
 	satisfies the constraints, the after context
 	and the after referral context."
-	(if (loop for con in constraints
-			  when (and (typep con 'string) (null (string-equal pretext con)))
-			  return T) nil 
+	(if (let ((string-cons (loop for con in constraints
+								when (typep con 'string)
+								collect con)))
+			(not (or (null string-cons) 
+				(loop for con in string-cons
+				 	when (string-equal text con)
+				 	return T)))) nil 
+
 	(let ((syntax-tag (get-syntax-tag constraints))
-		  (parents (get-parents constraints))
-		  (text (process-possessive pretext constraints)))
+		  (parents (get-parents constraints)))
 		(let ((result 
 			(append 
 				(loop for element-pair in (lookup-definitions text syntax-tag)
@@ -410,10 +398,11 @@
 								(lambda (subl) (append (list val) subl)) 
 								rest-result)))))))
 
-(defun multiple-apply (action variable-value-list)
+(defun multiple-apply (action variable-value-list verbose)
 	"The function takes in an action and a list of all possible values
 	for the variable, apply the action on each possible values and collect
 	the results."
+	(setq *construction-verbose* verbose)
 	(if (= (length variable-value-list) 1)
 		(apply action (car variable-value-list))
 		(loop for var-value in variable-value-list
@@ -463,49 +452,6 @@
 		(loop for ele in exp-modifier
 			collect (if (null ele) context ele))))
 
-; (defun constructor (text context &optional taglist verbose)
-; 	"the function takes in raw text and optional syntax tags 
-; 	and applies matched constructions actions on it, return the
-; 	output scone element, syntax tag, the context and the referral 
-; 	context after the construction."
-; 	(let ((before-ref-context (copy-tree *referral*))
-; 		  (before-context *context*))
-; 	(let ((result (loop for construction in *constructions*
-; 		for pattern = (construction-pattern construction)
-; 		for constraint = (construction-var-constraint construction)
-; 		for modifier = (merge-modifier context (construction-modifier construction)
-; 						(length (construction-var-constraint construction)))
-; 		for tag = (construction-tag construction)
-; 		do (setf *referral* before-ref-context)
-; 		do (in-context before-context)
-; 		when (and (pre-selection-pattern text pattern)
-; 			(pre-selection-constraint text constraint)
-; 			(not (null (construction-match-checker 
-; 						(tokenizer text) pattern constraint modifier)))
-; 			(or (null taglist) (find tag taglist)))
-; 		append 
-; 			(progn
-; 			(if verbose (commentary "Match ~S with construction ~S pattern ~{~a~^, ~}" 
-; 								text (construction-doc construction) pattern))
-; 			(let ((match-results 
-; 						(construction-matcher (tokenizer text) pattern constraint modifier verbose)))
-; 			(loop for match-result in match-results
-; 					for variable-value = (reverse (cdr (cdr (reverse match-result))))
-; 					for cur-ctx = (car (cdr (reverse match-result)))
-; 					for ctx = (if (= (context-occurance cur-ctx match-results) 1) 
-; 										cur-ctx (new-context nil cur-ctx))
-; 					do (in-context (if (null context) ctx context))
-; 					do (setf *referral* (car (last match-result)))
-; 					collect 
-; 						(let ((res (handler-case 
-; 							(multiple-apply (construction-action construction) 
-; 								(flatten-variable variable-value constraint)) (t nil))))
-; 							(if (not (null res)) 
-; 								(list res tag ctx (copy-tree *referral*))))))))))
-; 		(setf *referral* before-ref-context)
-; 		(in-context before-context)
-; 		(remove-null result))))
-
 (defun tree-constructor (construction-tree text context taglist partial verbose)
 	"the function takes in a construction tree, raw text, optional 
 	syntax tags and applies matched constructions actions on it, 
@@ -516,7 +462,6 @@
 		  (modifier (merge-modifier context (construction-modifier (car construction-tree))
 						(length (construction-var-constraint (car construction-tree)))))
 		  (tag (construction-tag (car construction-tree))))
-
 		(if (and (or (pre-selection-pattern text pattern) partial)
 				(pre-selection-constraint text constraint)
 				(if (null partial) (not (null (construction-match-checker 
@@ -541,7 +486,7 @@
 					append 
 						(let ((res (handler-case 
 							(multiple-apply (construction-action (car construction-tree)) 
-								(flatten-variable variable-value constraint)) (t nil))))
+								(flatten-variable variable-value constraint) verbose) (t nil))))
 							(if (not (null res))
 
 								(let ((new-ctx *context*)
@@ -550,7 +495,7 @@
 									(loop for cons-tree in (cdr construction-tree)
 										do (in-context new-ctx)
 										do (setf *referral* new-ref)
-										collect (tree-constructor cons-tree text context taglist partial verbose))))
+										append (tree-constructor cons-tree text context taglist partial verbose))))
 									(if (null new-res) (list (list res tag ctx new-ref)) new-res)))))))))))
 
 

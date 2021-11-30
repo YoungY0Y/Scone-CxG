@@ -65,7 +65,7 @@
 (new-string-number "two" {2})
 (new-string-number "three" {3})
 (new-string-number "four" {4})
-(new-string-number "a dozen of" {12})
+(new-string-number "a dozen" {12})
 
 ;;; ------------------------------------------------------------------------
 ;;; action verb
@@ -110,6 +110,7 @@
 (new-type-role {teammate} {person} {person} :english '("teammate" "teammates"))
 (new-type-role {roommate} {person} {person} :english '("roommate" "roommates"))
 (new-type-role {friend} {person} {person} :english '("friend" "friends"))
+(new-type-role {pet} {person} {animal} :english '("pet" "pets"))
 
 (new-type {basketball player} {person}
 		  :english '("basketball player" "basketball players"))
@@ -177,10 +178,8 @@
 ;;; ------------------------------------------------------------------------
 ;;; past tense time reference
 
-(new-indv {past} {general})
-(new-is-a {past} {time interval})
-(new-indv {future} {general})
-(new-is-a {future} {time interval})
+(new-context {past} (list {general} {time interval}))
+(new-context {future} (list {general} {time interval}))
 (x-is-the-y-of-z {now} {time interval finish} {past})
 (x-is-the-y-of-z {now} {time interval start} {future})
 

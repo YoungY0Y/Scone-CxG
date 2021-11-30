@@ -15,6 +15,15 @@
 ; (("an elephant" {elephant 0-2702} :NOUN))
 
 (refresh-context)
+(read-text "some elephants" nil t)
+; System reading "some elephants"
+; Match "some elephants" with construction "np new individual plural" pattern 0, 1
+; Match "some" with {some}
+; Match "elephants" with {elephant}
+; Take result {elephant 0-2706}
+; (("some elephants" {elephant 0-2706} :NOUN))
+
+(refresh-context)
 (read-text "a smart person" nil t)
 ; System reading "a smart person"
 ; Match "a smart person" with construction "np new individual with adj" pattern (a

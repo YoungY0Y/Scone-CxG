@@ -44,6 +44,22 @@
 		(not (null (lookup-definitions (subseq text 5) '(:verb)))))
 		(subseq text 5)))
 
+(defun process-possessive (text)
+	"The function takes in the text and return
+	if the text is a possessive noun"
+	(cond ((< (length text) 2) nil)
+		((equal text "his") "he")
+		((equal text "her") "she")
+		((equal text "its") "it")
+		((equal text "their") "they")
+		((and (equal (char (reverse text) 1) #\s) 
+			(equal (char (reverse text) 0) #\')) 
+				(subseq text 0 (- (length text) 1)))
+		((and (equal (char (reverse text) 0) #\s) 
+			 (equal (char (reverse text) 1) #\'))
+			  	(subseq text 0 (- (length text) 2)))
+		(t NIL)))
+
 (defun simple-morphology (text)
 	"a simple mopholorgy function that takes in a text, return
 	the root text and the morphology tags"
@@ -58,6 +74,7 @@
 		((not (null (is_simple_past text))) (list (is_simple_past text) :past))
 		((not (null (is_simple_singular text))) (list (is_simple_singular text) :singular))
 		((not (null (is_simple_future text))) (list (is_simple_future text) :future))
+		((not (null (process-possessive text))) (list (process-possessive text) :possessive))
 		(t (list text))
 		))
 
