@@ -11,8 +11,10 @@
 ; System reading "an elephant"
 ; Match "an elephant" with construction "np new individual" pattern (a an), 0
 ; Match "elephant" with {elephant}
-; Take result {elephant 0-2702}
-; (("an elephant" {elephant 0-2702} :NOUN))
+; Create new individual {elephant 0-2698}
+; Add {elephant 0-2698} to referral context
+; Take result {elephant 0-2698}
+; (("an elephant" {elephant 0-2698} :NOUN))
 
 (refresh-context)
 (read-text "some elephants" nil t)
@@ -20,8 +22,11 @@
 ; Match "some elephants" with construction "np new individual plural" pattern 0, 1
 ; Match "some" with {some}
 ; Match "elephants" with {elephant}
-; Take result {elephant 0-2706}
-; (("some elephants" {elephant 0-2706} :NOUN))
+; Create new type {elephant 0-2698}
+; Assert {some} is the {count} of {elephant 0-2698}
+; Add {elephant 0-2698} to referral context
+; Take result {elephant 0-2698}
+; (("some elephants" {elephant 0-2698} :NOUN))
 
 (refresh-context)
 (read-text "a smart person" nil t)
@@ -65,26 +70,24 @@
 ; (("Yang's friend" {person 0-2722} :NOUN))
 (list-all-x-of-y {friend} {Yang})
 ; ({person 0-2722})
-(read-text "Yang is a friend of Wesley" nil t)
-(read-text "Wesley's friend" nil t)
-; System reading "Yang is a friend of Wesley"
-; Create new name {Wesley}
-; Match "Yang is a friend of Wesley" with construction "create a y of z" pattern 0, (is a
-;                                                                                    is one of the), 1, (of), 2
+(read-text "Yang and Jack are friends" nil nil)
+; System reading "Yang and Jack are friends"
+; Create new name {Yang}
+; Create new name {Jack}
+; Take result ({Is-A 0-2713} {Is-A 0-2715})
+; (("Yang and Jack are friends" ({Is-A 0-2713} {Is-A 0-2715}) :RELATION))
+(read-text "Yang's friend" nil t)
+; System reading "Yang's friend"
+; Match "Yang's friend" with construction "possessive type-role" pattern 0, 1
 ; Match "Yang" with {Yang}
 ; Match "friend" with {friend}
-; Match "Wesley" with {Wesley}
-; Assuming {Wesley} is a {person} because it has a {friend}.
-; Take result {Is-A 0-2735}
-; System reading "Wesley's friend"
-; Match "Wesley's friend" with construction "possessive type-role" pattern 0, 1
-; Match "Wesley" with {Wesley}
-; Match "friend" with {friend}
-; Create new name {Wesley's}
-; Take result {Yang}
-; (("Yang's friend" {person 0-2722} :NOUN)
-;  ("Yang is a friend of Wesley" {Is-A 0-2735} :RELATION)
-;  ("Wesley's friend" {Yang} :NOUN))
+; Find {Jack} in referral context
+; where {Jack} is a {person}
+; Assert {Yang} is a {person}
+; Add {Jack} to referral context
+; Take result {Jack}
+; (("Yang and Jack are friends" ({Is-A 0-2713} {Is-A 0-2715}) :RELATION)
+;  ("Yang's friend" {Jack} :NOUN))
 
 ;;; ------------------------------------------------------------------------
 ;;; Parallel structure
@@ -257,20 +260,22 @@
 ;;; Prepositional Phrase
 
 (refresh-context)
-(read-text "elephants are smart in Africa" nil t)
-; System reading "elephants are smart in Africa"
-; Match "elephants are smart in Africa" with construction "location prepositional phrase" pattern 0, (in
-;                                                                                                     at
-;                                                                                                     on), 1
-; Match "elephants are smart" with construction "state verb adj" pattern 0, 1, 2
+(read-text "elephants are grey in Africa" nil t)
+; System reading "elephants are grey in Africa"
+; Match "elephants are grey in Africa" with construction "location prepositional phrase" pattern 0, (in
+;                                                                                                    at
+;                                                                                                    on), 1
+; Match "elephants are grey" with construction "state verb adj" pattern 0, 1, 2
 ; Match "elephants" with {elephant}
-; Match "smart" with {smart thing}
-; Match "elephants are smart" with {Is-A 0-2812}
+; Match "are" with {are}
+; Match "grey" with {gray thing}
+; Add {elephant} to referral context
+; Create new is-a link between {elephant} and {gray thing}
+; Match "elephants are grey" with {Is-A 0-2699}
 ; Match "Africa" with {Africa}
-; Take result {Is-A 0-2812}
-; (("elephants are smart in Africa" {Is-A 0-2812} :RELATION))
-(simple-is-x-a-y? (context-element {Is-A 0-2812}) {Africa})
-; T
+; Change context of {Is-A 0-2699} to {Africa}
+; Take result {Is-A 0-2699}
+; (("elephants are grey in Africa" {Is-A 0-2699} :RELATION))
 
 ;;; ------------------------------------------------------------------------
 ;;; Example for Context Back-tracking

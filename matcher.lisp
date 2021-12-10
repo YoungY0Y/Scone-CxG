@@ -444,13 +444,15 @@
 			T)
 		(pre-selection-constraint text (cdr constraint)))))
 
-(defun merge-modifier (context modifier len)
-	"the function takes in a context for a construction, the modifier and 
-	number of variables, return the new modifier for the subparts of
-	the construction"
-	(let ((exp-modifier (if (null modifier) (make-list len) modifier)))
-		(loop for ele in exp-modifier
-			collect (if (null ele) context ele))))
+(defun merge-modifier (context modifiers)
+	"the function takes in a context for a construction, the modifier, 
+	return the new modifier for the subparts of the construction"
+	(loop for modifier in modifiers
+		collect (let ((ctx_modifier 
+						(loop for ele in modifier
+							when (or (typep ele 'element) (typep ele 'element-iname))
+							return ele)))
+				(if (null ctx_modifier) context ctx_modifier))))
 
 (defun tree-constructor (construction-tree text context taglist partial verbose)
 	"the function takes in a construction tree, raw text, optional 
@@ -459,8 +461,7 @@
 	referral context after the construction."
 	(let ((pattern (construction-pattern (car construction-tree)))
 		  (constraint (construction-var-constraint  (car construction-tree)))
-		  (modifier (merge-modifier context (construction-modifier (car construction-tree))
-						(length (construction-var-constraint (car construction-tree)))))
+		  (modifier (merge-modifier context (construction-modifier (car construction-tree))))
 		  (tag (construction-tag (car construction-tree))))
 		(if (and (or (pre-selection-pattern text pattern) partial)
 				(pre-selection-constraint text constraint)
@@ -486,7 +487,7 @@
 					append 
 						(let ((res (handler-case 
 							(multiple-apply (construction-action (car construction-tree)) 
-								(flatten-variable variable-value constraint) verbose) (t nil))))
+								(flatten-variable variable-value (construction-modifier (car construction-tree))) verbose) (t nil))))
 							(if (not (null res))
 
 								(let ((new-ctx *context*)

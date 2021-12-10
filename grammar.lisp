@@ -79,7 +79,7 @@
 	(loop for i from 0 to (- (length variables) 1)
 		collect (loop for component in modifier
 					when (equal (car component) (car (nth i variables)))
-					return (car (cdr component)))))
+					return  (cdr component))))
 
 (defun add-construction (new-cons parent)
 	""
@@ -123,6 +123,8 @@
 	:ret-tag :noun
 	:modifier NIL
 	:action (let ((new-node (new-indv NIL (car ?x))))
+				(if *construction-verbose* (commentary "Create new individual ~S" new-node))
+				(if *construction-verbose* (commentary "Add ~S to referral context" new-node))
 			  	(add-np-to-referral new-node)
 				new-node)
 	:parent NIL
@@ -136,6 +138,9 @@
 	:action (let ((new-node (new-indv NIL (car ?y))))
 			  	(new-is-a new-node (car ?x))
 			  	(add-np-to-referral new-node)
+			  	(if *construction-verbose* (commentary "Create new individual ~S" new-node))
+			  	(if *construction-verbose* (commentary "Assert ~S is a ~S" new-node (car ?x)))
+				(if *construction-verbose* (commentary "Add ~S to referral context" new-node))
 				new-node)
 	:parent NIL
 	:doc "np new individual with adj")
@@ -155,8 +160,11 @@
 	:ret-tag :noun
 	:modifier NIL
 	:action (let ((new-node (new-type NIL (car ?y))))
-			  	(x-is-the-y-of-z (car ?x) {count} (car ?y))
+			  	(x-is-the-y-of-z (car ?x) {count} new-node)
 			  	(add-np-to-referral new-node)
+			  	(if *construction-verbose* (commentary "Create new type ~S" new-node))
+			  	(if *construction-verbose* (commentary "Assert ~S is the {count} of ~S" (car ?x) new-node))
+				(if *construction-verbose* (commentary "Add ~S to referral context" new-node))
 				new-node)
 	:parent NIL
 	:doc "np new individual plural")
@@ -224,7 +232,7 @@
 
 (new-construction
 	:variables ((?x :noun) (?y :noun))
-	:pattern (?x ("and") ?y)
+	:pattern (?x ("and" ", and") ?y)
 	:ret-tag :noun
 	:modifier NIL
 	:action (if (and (null (find :possessive (cdr ?x)))
@@ -234,10 +242,10 @@
 	:doc "noun parallel structure")
 
 (new-construction
-	:variables ((?x :noun) (?y :noun :list))
+	:variables ((?x :noun) (?y :noun))
 	:pattern (?x (",") ?y)
 	:ret-tag :noun
-	:modifier NIL
+	:modifier ((?y :list))
 	:action (if (> (length (car ?y)) 1) (append (list (car ?x)) (car ?y)) nil)
 	:parent NIL
 	:doc "noun parallel structure")
@@ -252,10 +260,10 @@
 	:doc "adj parallel structure")
 
 (new-construction
-	:variables ((?x :adj) (?y :adj :list))
+	:variables ((?x :adj) (?y :adj ))
 	:pattern (?x (",") ?y)
 	:ret-tag :adj
-	:modifier NIL
+	:modifier ((?y :list))
 	:action (if (> (length (car ?y)) 1) (append (list (car ?x)) (car ?y)) nil)
 	:parent NIL
 	:doc "adj parallel structure")
@@ -278,42 +286,50 @@
 				(progn
 					(new-is-a (car ?x) (context-element (car ?y)))
 					(add-np-to-referral prescan)
+					(if *construction-verbose* (commentary "Find ~S in referral context" prescan))
+					(if *construction-verbose* (commentary "where ~S is a ~S" prescan (parent-element (car ?y))))
+					(if *construction-verbose* (commentary "Assert ~S is a ~S" (car ?x) (context-element (car ?y))))
+					(if *construction-verbose* (commentary "Add ~S to referral context" prescan))
 					prescan)
 				(let ((new-node (new-indv NIL (parent-element (car ?y)))))
 					(new-is-a (car ?x) (context-element (car ?y)))
 					(x-is-a-y-of-z new-node (car ?y) (car ?x))
 					(add-np-to-referral new-node)
+					(if *construction-verbose* (commentary "Create new indiv ~S, child of ~S" new-node (parent-element (car ?y))))
+					(if *construction-verbose* (commentary "Assert ~S is a ~S" (car ?x) (context-element (car ?y))))
+					(if *construction-verbose* (commentary "Assert ~S is a ~S of ~S" new-node (car ?y) (car ?x)))
+					(if *construction-verbose* (commentary "Add ~S to referral context" new-node))
 					new-node))))
 	:parent NIL
 	:doc "possessive type-role")
 
-(new-construction
-	:variables ((?x :noun) (?y :type))
-	:pattern (?x ?y)
-	:ret-tag :noun
-	:modifier NIL
-	:action ;; to-do: add ?y plural case
-			(if (not (null (find :possessive (cdr ?x))))  
-			(let ((prescan 
-				(loop for np-ele in *referral*
-					when (and (null (typep np-ele 'cons))
-						(type-role-node? np-ele)   
-						(simple-is-x-a-y? np-ele (car ?y))
-						(simple-is-x-a-y? (car ?x) (context-element np-ele)))
-					return np-ele)))
+; (new-construction
+; 	:variables ((?x :noun) (?y :type))
+; 	:pattern (?x ?y)
+; 	:ret-tag :noun
+; 	:modifier NIL
+; 	:action ;; to-do: add ?y plural case
+; 			(if (not (null (find :possessive (cdr ?x))))  
+; 			(let ((prescan 
+; 				(loop for np-ele in *referral*
+; 					when (and (null (typep np-ele 'cons))
+; 						(type-role-node? np-ele)   
+; 						(simple-is-x-a-y? np-ele (car ?y))
+; 						(simple-is-x-a-y? (car ?x) (context-element np-ele)))
+; 					return np-ele)))
 			
-			(if (not (null prescan)) 
-				(progn
-					(add-np-to-referral prescan)
-					prescan)
-				; (let ((new-node (new-indv NIL (parent-element (car ?y)))))
-				; 	(new-is-a (car ?x) (context-element (car ?y)))
-				; 	(x-is-a-y-of-z new-node (car ?y) (car ?x))
-				; 	(add-np-to-referral new-node)
-				; 	new-node)
-				)))
-	:parent NIL
-	:doc "possessive type")
+; 			(if (not (null prescan)) 
+; 				(progn
+; 					(add-np-to-referral prescan)
+; 					prescan)
+; 				; (let ((new-node (new-indv NIL (parent-element (car ?y)))))
+; 				; 	(new-is-a (car ?x) (context-element (car ?y)))
+; 				; 	(x-is-a-y-of-z new-node (car ?y) (car ?x))
+; 				; 	(add-np-to-referral new-node)
+; 				; 	new-node)
+; 				)))
+; 	:parent NIL
+; 	:doc "possessive type")
 
 
 ;;; ------------------------------------------------------------------------
@@ -431,7 +447,10 @@
 	(progn
 		(if (find :past (cdr ?v)) (in-context (new-indv nil {past})))
 		(if (find :future (cdr ?v)) (in-context (new-indv nil {future})))
-		(new-statement (car ?x) (car ?v) (car ?z)))
+		
+		(let ((new-stat (new-statement (car ?x) (car ?v) (car ?z))))
+			(if *construction-verbose* (commentary "Create new relation ~S: ~S ~S ~S" new-stat (car ?x) (car ?v) (car ?z)))
+			new-stat))
 	:parent NIL
 	:doc "state hate")
 
@@ -498,10 +517,10 @@
 	:doc "state verb adj")
 
 (new-construction
-	:variables ((?x {is-a link} :relation :list) (?y :adj :list))
+	:variables ((?x {is-a link} :relation) (?y :adj))
 	:pattern (?x (", not" "not") ?y)
 	:ret-tag :relation
-	:modifier NIL
+	:modifier ((?x :list) (?y :list))
 	:action (let ((agent (a-element (car (last (car ?x)))))
 				  (ctx (context-element (car (last (car ?x))))))
 				(in-context ctx)
@@ -540,10 +559,10 @@
 	:doc "state verb type")
 
 (new-construction
-	:variables ((?x {is-a link} :relation :list) (?y :noun :type :list))
+	:variables ((?x {is-a link} :relation) (?y :noun :type))
 	:pattern (?x (", not" "not") ?y)
 	:ret-tag :relation
-	:modifier NIL
+	:modifier ((?x :list) (?y :list))
 	:action (let ((agent (a-element (car (last (car ?x)))))
 				  (ctx (context-element (car (last (car ?x))))))
 				(in-context ctx)
@@ -675,10 +694,10 @@
 	:doc "create a y of z")
 
 (new-construction
-	:variables ((?x :noun :list) (?y :type-role))
+	:variables ((?x :noun) (?y :type-role))
 	:pattern (?x ("are the") ?y)
 	:ret-tag :relation
-	:modifier NIL
+	:modifier ((?x :list))
 	:action (let ((parent (context-element (car ?y))))
 			(loop for np-ele in *referral*
 				when (handler-case (simple-is-x-a-y? np-ele parent) (t nil)) 
@@ -688,27 +707,30 @@
 	:doc "create several y of z")
 
 (new-construction
-	:variables ((?x :noun :list) (?y :type-role) (?z))
+	:variables ((?x :noun) (?y :type-role) (?z))
 	:pattern (?x ("are the") ?y ("of") ?z)
 	:ret-tag :relation
-	:modifier NIL
+	:modifier ((?x :list))
 	:action (loop for x in (car ?x) 
 				collect (x-is-a-y-of-z x (car ?y) (car ?z)))
 	:parent NIL
 	:doc "create several y of z")
 
 (new-construction
-	:variables ((?x {person} :list :noun) (?y {friend} :type-role)) 
+	:variables ((?x {person} :noun) (?y {friend} :type-role)) 
 	:pattern (?x ("are") ?y)
 	:ret-tag :relation
-	:modifier NIL
+	:modifier ((?x :list))
 	:action (let ((len (length (car ?x))))
 				(if (< len 2) (error 'grammar-error 
 					:message "not enough agent to support the relation"))
 				(loop for i from 0 to (- len 2)
 		       append (loop for j from (+ i 1) to (- len 1)
-		       		append (list (x-is-a-y-of-z (nth i (car ?x)) (car ?y) (nth j (car ?x)))
-		       					 (x-is-a-y-of-z (nth j (car ?x)) (car ?y) (nth i (car ?x)))))))
+		       		append (progn
+		       				(if *construction-verbose* (commentary "Assert ~S is a {friend} of ~S" (nth i (car ?x)) (nth j (car ?x))))
+		       				(if *construction-verbose* (commentary "Assert ~S is a {friend} of ~S" (nth j (car ?x)) (nth i (car ?x))))
+		       				(list (x-is-a-y-of-z (nth i (car ?x)) (car ?y) (nth j (car ?x)))
+		       					 (x-is-a-y-of-z (nth j (car ?x)) (car ?y) (nth i (car ?x))))))))
 	:parent NIL
 	:doc "state verb relation friend")
 
@@ -759,15 +781,16 @@
 	:modifier ((?x (new-context nil (list *context* {place}))))
 	:action (progn
 				(new-eq (context-element (car ?x)) (car ?y))
+				(if *construction-verbose* (commentary "Change context of ~S to ~S" (car ?x) (car ?y)))
 				(car ?x))
 	:parent NIL
 	:doc "location prepositional phrase")
 
 (new-construction 
-	:variables ((?x {person} :noun :list) (?y :relation))
+	:variables ((?x {person} :noun) (?y :relation))
 	:pattern (?x ("believes that" "believe that") ?y)
 	:ret-tag :relation
-	:modifier ((?y (new-context nil (list {person}))))
+	:modifier ((?x :list) (?y (new-context nil (list {person}))))
 	:action (progn
 				(loop for per in (car ?x)
 					 do (new-is-a per (context-element (car ?y))))
